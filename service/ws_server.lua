@@ -1,24 +1,22 @@
 local skynet = require "skynet"
 local socket = require "skynet.socket"
-local websocket = require "websocket"
 local httpd = require "http.httpd"
 local urllib = require "http.url"
 local sockethelper = require "http.sockethelper"
+local util = require "util"
 
-local web_handler, net_handler, port = ...
-local web_handler = require(web_handler)
-web_handler.net_handler = require(net_handler)
+local player, port = ...
+
+
 
 local function handle_socket(id)
     -- limit request body size to 8192 (you can pass nil to unlimit)
     local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 8192)
     if code then
         if header.upgrade == "websocket" then
-            local ws = websocket.new(id, header, web_handler)
-            ws:start()
+            skynet.newservice("agent/ws_agent", id, "fuck", player)
         end
     end
-
 
 end
 
