@@ -277,4 +277,53 @@ function util.merge_list(list1, list2)
     return list
 end
 
+local function tostring_ex(value)
+    if type(value)=='table' then
+        return util.tbl2str(value)
+    elseif type(value)=='string' then
+        return "\'"..value.."\'"
+    else
+        return tostring(value)
+    end
+end
+
+function util.tbl2str(t)
+    if t == nil then return "" end
+    local retstr= "{"
+
+    local i = 1
+    for key,value in pairs(t) do
+        local signal = ","
+        if i==1 then
+            signal = ""
+        end
+
+        if key == i then
+            retstr = retstr..signal..tostring_ex(value)
+        else
+            if type(key)=='number' or type(key) == 'string' then
+                retstr = retstr..signal..'['..tostring_ex(key).."]="..tostring_ex(value)
+            else
+                if type(key)=='userdata' then
+                    retstr = retstr..signal.."*s"..util.tbl2str(getmetatable(key)).."*e".."="..tostring_ex(value)
+                else
+                    retstr = retstr..signal..key.."="..tostring_ex(value)
+                end
+            end
+        end
+
+        i = i+1
+    end
+
+    retstr = retstr.."}"
+    return retstr
+end
+
+function util.str2tbl(str)
+    if str == nil or type(str) ~= "string" then
+        return
+    end
+    return load("return " .. str)()
+end
+
 return util
