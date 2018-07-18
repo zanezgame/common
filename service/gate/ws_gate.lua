@@ -4,14 +4,17 @@ local websocket = require "websocket"
 local httpd = require "http.httpd"
 local urllib = require "http.url"
 local sockethelper = require "http.sockethelper"
+local json = require "cjson"
 
 local player, port = ...
+local NORET = "NORET"
+local socks = {} -- id:ws
 
 local function handle_socket(id)
     -- limit request body size to 8192 (you can pass nil to unlimit)
     local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 8192)
     if code then
-        local agent = skynet.newservice("agent/ws_agent", id, player)
+        local agent = skynet.newservice("agent/ws_agent", id, player, skynet.self())
         local handler = {}
         function handler.on_open(ws)
             print(string.format("%d::open", ws.id))
@@ -31,11 +34,17 @@ local function handle_socket(id)
 
         if header.upgrade == "websocket" then
             local ws = websocket.new(id, header, handler)
+            socks[id] = ws
             ws:start()
         end
     end
+end
 
-
+local CMD = {}
+function CMD.send(id, msg)
+    local ws = socks[id]
+    assert(ws)
+    ws:send_text(json.encode(msg))
 end
 
 skynet.start(function()
@@ -45,5 +54,16 @@ skynet.start(function()
     socket.start(id , function(id, addr)
        socket.start(id)
        pcall(handle_socket, id)
+    end)
+
+    skynet.dispatch("lua", function(_, _, cmd1, ...)
+        local ret = NORET
+        local f = CMD[cmd1]
+        if f then
+            ret = f(...)
+        end
+        if ret ~= NORET then
+            skynet.ret(skynet.pack(ret))
+        end
     end)
 end)

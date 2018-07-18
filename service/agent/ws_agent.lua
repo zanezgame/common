@@ -3,7 +3,9 @@ local websocket = require "websocket"
 local json = require "cjson"
 local util = require "util"
 
-local sock_id, player = ...
+local sock_id, player, ws_gate = ...
+sock_id = tonumber(sock_id)
+ws_gate = tonumber(ws_gate)
 local player = require(player)
 
 local NORET = "NORET"
@@ -54,38 +56,6 @@ skynet.start(function()
             skynet.ret(skynet.pack(ret))
         end
     end)
+    player:init(ws_gate, sock_id)
 end)
 
---[[
-local function handle_socket(id)
-    -- limit request body size to 8192 (you can pass nil to unlimit)
-    local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 8192)
-    if code then
-        if header.upgrade == "websocket" then
-            print("&&&&& new sock")
-            --local agent = skynet.newservice("agent/ws_agent", id, player)
-            local handler = {}
-            function handler.on_open(ws)
-                print(string.format("%d::open", ws.id))
-                skynet.call(agent, "lua", "on_open") 
-            end
-
-            function handler.on_message(ws, message)
-                print(string.format("%d receive:%s", ws.id, message))
-                local ret = skynet.call(agent, "lua", "on_message") 
-                ws:send_text(ret) 
-            end
-
-            function handler.on_close(ws, code, reason)
-                print(string.format("%d close:%s  %s", ws.id, code, reason))
-                skynet.call(agent, "lua", "on_close") 
-                ws:close()
-            end
-
-            local ws = websocket.new(id, header, handler)
-            ws:start()
-        end
-    end
-
-end
-]]
