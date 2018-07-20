@@ -1,9 +1,10 @@
-local skynet = require "skynet"
-local socket = require "skynet.socket"
-local httpd = require "http.httpd"
-local sockethelper = require "http.sockethelper"
-local urllib = require "http.url"
-local json = require "cjson"
+local skynet        = require "skynet"
+local socket        = require "skynet.socket"
+local httpd         = require "http.httpd"
+local sockethelper  = require "http.sockethelper"
+local urllib        = require "http.url"
+local json          = require "cjson"
+
 local table = table
 local string = string
 

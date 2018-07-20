@@ -1,7 +1,7 @@
-local skynet = require "skynet"
-local mongo = require "skynet.db.mongo"
-local bson = require "bson"
-local util = require "util"
+local skynet    = require "skynet"
+local mongo     = require "skynet.db.mongo"
+local bson      = require "bson"
+local util      = require "util"
 
 local host, port, db_name
 local db

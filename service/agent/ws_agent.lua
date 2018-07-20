@@ -1,7 +1,7 @@
-local skynet = require "skynet"
+local skynet    = require "skynet"
 local websocket = require "websocket"
-local json = require "cjson"
-local util = require "util"
+local json      = require "cjson"
+local util      = require "util"
 
 local sock_id, player, ws_gate = ...
 sock_id = tonumber(sock_id)

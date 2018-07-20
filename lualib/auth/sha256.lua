@@ -727,7 +727,7 @@ function sha256.sha256_binary(msg)
 	return hex_to_binary(sha256.sha256(msg))
 end
 
-function sha256.hmac_sha256(key, text)
+function sha256.hmac_sha256(text, key)
 	assert(type(key) == 'string', "key passed to hmac_sha256 should be a string")
 	assert(type(text) == 'string', "text passed to hmac_sha256 should be a string")
 
