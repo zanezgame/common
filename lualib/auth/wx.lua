@@ -1,6 +1,7 @@
--- 微信验证
--- 每个需要用到的服务都需要在启动的时候调wx.init
+--  微信验证
+--  每个需要用到的服务都需要在启动的时候调wx.init
 --
+
 local skynet    = require "skynet"
 local http      = require "http_helper"
 local json      = require "cjson"
@@ -59,6 +60,7 @@ function M.check_code(js_code)
     end
 end
 
+-- data {score = 100, gold = 300}
 function M.set_user_storage(openid, session_key, data)
     assert(appid and secret)
     local kv_list = {}
@@ -67,6 +69,25 @@ function M.set_user_storage(openid, session_key, data)
     end
     local post = json.encode({kv_list = kv_list})
     local url = "https://api.weixin.qq.com/wxa/set_user_storage?"..http.url_encoding({
+        access_token = M.get_access_token(),
+        openid = openid,
+        appid = appid,
+        signature = sha256.hmac_sha256(post, session_key),
+        sig_method = "hmac_sha256", 
+    })
+    local ret, resp = http.post(url, post)
+    if ret then
+        return json.decode(resp)
+    else
+        error(resp)
+    end
+end
+
+-- key_list {"score", "gold"}
+function M.remove_user_storage(openid, session_key, key_list)
+    assert(appid and secret)
+    local post = json.encode({key = key_list})
+    local url = "https://api.weixin.qq.com/wxa/remove_user_storage?"..http.url_encoding({
         access_token = M.get_access_token(),
         openid = openid,
         appid = appid,
