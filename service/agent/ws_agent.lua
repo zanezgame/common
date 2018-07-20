@@ -16,7 +16,6 @@ function CMD.on_open()
 end
 
 function CMD.on_message(message)
-    print("message", message)
     local data = json.decode(message)
     local recv_id = data.id
     if recv_id == "HearBeatPing" then
@@ -26,7 +25,7 @@ function CMD.on_message(message)
     local resp_id = "S2c"..string.match(recv_id, "C2s(.+)")
     assert(player[recv_id], "net handler nil")
     if player[recv_id] then
-        local msg = player[recv_id](player, data) or {}
+        local msg = player[recv_id](player, data.msg) or {}
         return json.encode({
             id = recv_id,
             msg = msg,

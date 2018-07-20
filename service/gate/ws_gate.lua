@@ -5,6 +5,7 @@ local httpd = require "http.httpd"
 local urllib = require "http.url"
 local sockethelper = require "http.sockethelper"
 local json = require "cjson"
+local util = require "util"
 
 local player, port = ...
 local NORET = "NORET"
