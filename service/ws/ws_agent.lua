@@ -12,7 +12,7 @@ local NORET = "NORET"
 
 local CMD = {}
 function CMD.on_open()
-
+    print("ws on_open")
 end
 
 function CMD.on_message(message)
@@ -34,7 +34,7 @@ function CMD.on_message(message)
 end
 
 function CMD.on_close()
-
+    print("ws on_close")
 end
 
 skynet.start(function()
