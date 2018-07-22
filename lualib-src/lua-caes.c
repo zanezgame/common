@@ -26,7 +26,7 @@ static const struct luaL_Reg luaaes [] = {
     {NULL, NULL}
 };
 
-int luaopen_caes(lua_State *L) 
+LUALIB_API int luaopen_caes(lua_State *L) 
 {
     luaL_Reg libs[] = {
         {"init", l_init},
