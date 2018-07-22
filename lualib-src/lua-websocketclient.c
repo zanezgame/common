@@ -34,7 +34,7 @@
 										  "Host: "#ip":"#port"\r\n"	\
 										  "Sec-WebSocket-Key: Vld9DdQJkJTVKdwRExlMA==\r\n"	\
 										  "User-Agent: LuaWebSocketClient/1.0\r\n"	\
-										  "Upgrade: Websocket\r\n"	\
+										  "Upgrade: websocket\r\n"	\
 										  "Connection: Upgrade\r\n"	\
 										  "Sec-WebSocket-Protocol: wamp\r\n" \
 										  "Sec-WebSocket-Version: 13\r\n"	\
