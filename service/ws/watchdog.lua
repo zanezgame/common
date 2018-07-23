@@ -24,6 +24,7 @@ local function handle_socket(id)
 
         function handler.on_message(ws, message)
             print(string.format("%d receive:%s", ws.id, message))
+            ws:send_text(message)
             local ret = skynet.call(agent, "lua", "on_message", message) 
         end
 

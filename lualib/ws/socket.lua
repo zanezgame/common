@@ -166,6 +166,7 @@ function ws:send_frame(fin, opcode, data)
 end
 
 function ws:send_text(data)
+    print("send text", data)
     self:send_frame(true, 0x1, data)
 end
 
