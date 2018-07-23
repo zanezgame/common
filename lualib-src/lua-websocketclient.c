@@ -124,6 +124,7 @@ static int recv_websocket_header_response(int fd)
 
 static int common_block_send(int fd, const char * buffer, int sz)
 {
+    printf("common_block_send fd:%d sz:%d\n", fd, sz);
 	while(sz > 0) {
 		int r = send(fd, buffer, sz, 0);
 		if (r < 0) {
@@ -165,10 +166,10 @@ lconnect(lua_State *L) {
 		return luaL_error(L, "Connect %s %d send websocket data failed", addr, port);		
 	}
 
-	//if (recv_websocket_header_response(fd) < 0)
-	//{
-//		return luaL_error(L, "Connect %s %d websocket handleshake failed", addr, port);
-//	}
+	if (recv_websocket_header_response(fd) < 0)
+	{
+		return luaL_error(L, "Connect %s %d websocket handleshake failed", addr, port);
+	}
 
     printf("connect !!!\n");
 	lua_pushinteger(L, fd);
@@ -247,8 +248,8 @@ lsend(lua_State *L) {
 	int fd = luaL_checkinteger(L,1);
 	const char * msg = luaL_checklstring(L, 2, &sz);
 
-	//block_send(L, fd, msg, (int)sz);
-	websocket_block_send(L, fd, msg, (int)sz);
+	block_send(L, fd, msg, (int)sz);
+	//websocket_block_send(L, fd, msg, (int)sz);
 	return 0;
 }
 

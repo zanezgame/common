@@ -15,7 +15,7 @@ local function handle_socket(id)
     -- limit request body size to 8192 (you can pass nil to unlimit)
     local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 8192)
     if code then
-        local agent = skynet.newservice("ws/ws_agent", id, player, skynet.self())
+        local agent = skynet.newservice("ws/agent", id, player, skynet.self())
         local handler = {}
         function handler.on_open(ws)
             print(string.format("%d::open", ws.id))

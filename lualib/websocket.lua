@@ -291,7 +291,7 @@ function ws:recv_frame()
         frame_mask = mask
     end
 
-    --print('final_frame:', final_frame, "frame_opcode:", frame_opcode, "mask_frame:", mask_frame, "frame_length:", frame_length)
+    print('final_frame:', final_frame, "frame_opcode:", frame_opcode, "mask_frame:", mask_frame, "frame_length:", frame_length)
 
     local  frame_data = ""
     if frame_length > 0 then
@@ -305,12 +305,14 @@ function ws:recv_frame()
     if mask_frame and frame_length > 0 then
         frame_data = websocket_mask(frame_mask, frame_data, frame_length)
     end
-
+    
+    print("frame_data", frame_data)
 
     if not final_frame then
-        return true, false, frame_data
+        --return true, false, frame_data
+        return true, true, frame_data
     else
-        if frame_opcode  == 0x1 then -- text
+        if frame_opcode == 0x1 then -- text
             return true, true, frame_data
         elseif frame_opcode == 0x2 then -- binary
             return true, true, frame_data
@@ -340,7 +342,7 @@ function ws:start()
     while true do
         local message, err = self:recv()
         if not message then
-            --print('recv eror:', message, err)
+            print('recv eror:', message, err)
             socket.close(self.id)
         end
     end
