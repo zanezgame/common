@@ -124,9 +124,9 @@ static int recv_websocket_header_response(int fd)
 
 static int common_block_send(int fd, const char * buffer, int sz)
 {
-    printf("common_block_send fd:%d sz:%d\n", fd, sz);
 	while(sz > 0) {
 		int r = send(fd, buffer, sz, 0);
+        printf("common_block_send fd:%d sz:%d r:%d\n", fd, sz, r);
 		if (r < 0) {
 			if (errno == EAGAIN || errno == EINTR)
 				continue;
@@ -192,20 +192,20 @@ websocket_block_send(lua_State *L, int fd, const char * buffer, int64_t sz) {
 	int pos = 0;
     char frame_header[16];
 
-    frame_header[pos++] = FRAME_SET_FIN(1) | FRAME_SET_OPCODE(4);
+    frame_header[pos++] = FRAME_SET_FIN(1) | FRAME_SET_OPCODE(1);
     if (sz < 126)
     {
-        frame_header[pos++] = FRAME_SET_MASK(0) | FRAME_SET_LENGTH(sz, 0);
+        frame_header[pos++] = FRAME_SET_MASK(1) | FRAME_SET_LENGTH(sz, 0);
     }
     else
     {
         if (sz < 65536)
         {
-            frame_header[pos++] = FRAME_SET_MASK(0) | 126;
+            frame_header[pos++] = FRAME_SET_MASK(1) | 126;
         }
         else
         {
-            frame_header[pos++] = FRAME_SET_MASK(0) | 127;
+            frame_header[pos++] = FRAME_SET_MASK(1) | 127;
             frame_header[pos++] = FRAME_SET_LENGTH(sz, 7);
             frame_header[pos++] = FRAME_SET_LENGTH(sz, 6);
             frame_header[pos++] = FRAME_SET_LENGTH(sz, 5);
@@ -228,6 +228,7 @@ static void
 block_send(lua_State *L, int fd, const char * buffer, int sz) {
 	while(sz > 0) {
 		int r = send(fd, buffer, sz, 0);
+        printf("block_send fd:%d sz:%d r:%d\n", fd, sz, r);
 		if (r < 0) {
 			if (errno == EAGAIN || errno == EINTR)
 				continue;

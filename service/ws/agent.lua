@@ -1,5 +1,5 @@
 local skynet    = require "skynet"
-local websocket = require "websocket"
+local websocket = require "ws.socket"
 local json      = require "cjson"
 local util      = require "util"
 
