@@ -6,27 +6,25 @@ local player_t = ...
 local player_t = require "player_t"
 
 local NORET = "NORET"
-local players = {}
+local player
+local ws
 
 local CMD = {}
-function CMD.new(url)
-    local ws = ws_client.new()
+function CMD.start(url, account)
+    ws = ws_client.new()
     ws:connect(string.format(url))
-    local player = player_t.new(ws)
-    players[ws] = player
+    player = player_t.new(ws, account)
     player:on_open()
 end
 
 function CMD.recv()
-    for ws, player in pairs(players) do
-        while true do
-            local ret = ws:recv_frame()
-            if ret then
-                print("recv", ret)
-                player:on_message(ret)
-            else
-                break
-            end
+    while ws do
+        local ret = ws:recv_frame()
+        if ret then
+            print("recv", ret)
+            player:on_message(ret)
+        else
+            break
         end
     end
     skynet.timeout(10, function()
@@ -34,8 +32,8 @@ function CMD.recv()
     end)
 end
 
-function CMD.close()
-    -- todo
+function CMD.stop()
+    ws:close()
 end
 
 skynet.start(function()		
@@ -48,7 +46,6 @@ skynet.start(function()
             skynet.ret(skynet.pack(ret))
         end
     end)
-
-    CMD.recv()
+    CMD.recv()    
 end)
 
