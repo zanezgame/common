@@ -34,7 +34,6 @@ function _M.new(self, opts)
       send_unmasked = opts.send_unmasked
         timeout = opts.timeout
    end
-   
    return setmetatable({
 			  sock = sock,
 			  max_payload_len = max_payload_len or 65535,
@@ -129,11 +128,11 @@ end
 
 
 function _M.set_timeout(self, time)
-    local sock = self.sock
+    local sock = self.socket
     if not sock then
         return nil, nil, "not initialized yet"
     end
-    return socket:settimeout(time)
+    return sock:settimeout(time)
 end
 
 
@@ -248,7 +247,7 @@ end
 
 
 function _M.set_keepalive(self, ...)
-    local sock = self.sock
+    local sock = self.socket
     if not sock then
         return nil, "not initialized"
     end

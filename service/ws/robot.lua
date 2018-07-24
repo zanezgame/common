@@ -11,8 +11,9 @@ local ws
 
 local CMD = {}
 function CMD.start(url, account)
-    ws = ws_client.new()
+    ws = ws_client:new({timeout = 1})
     ws:connect(string.format(url))
+    print(ws:set_timeout(1))
     player = player_t.new(ws, account)
     player:on_open()
 end
@@ -24,10 +25,14 @@ function CMD.recv()
             print("recv", ret)
             player:on_message(ret)
         else
+            print("done !!!!")
             break
         end
     end
-    skynet.timeout(10, function()
+    if ws then
+        player:ping()
+    end
+    skynet.timeout(100, function()
         CMD.recv()
     end)
 end

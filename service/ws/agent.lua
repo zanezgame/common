@@ -3,9 +3,9 @@ local websocket = require "ws.socket"
 local json      = require "cjson"
 local util      = require "util"
 
-local sock_id, player, ws_gate = ...
+local sock_id, player, watchdog = ...
 sock_id = tonumber(sock_id)
-ws_gate = tonumber(ws_gate)
+watchdog = tonumber(watchdog)
 local player = require(player)
 
 local NORET = "NORET"
@@ -55,6 +55,6 @@ skynet.start(function()
             skynet.ret(skynet.pack(ret))
         end
     end)
-    player:init(ws_gate, sock_id)
+    player:init(watchdog, sock_id)
 end)
 

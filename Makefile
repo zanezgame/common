@@ -4,6 +4,7 @@ LIB_DIR = ./luaclib
 SRC = ${wildcard ${SRC_DIR}/*.c}
 LIB = ${patsubst lua-%.c, ${LIB_DIR}/%.so, ${notdir ${SRC}}}
 
+
 all:${LIB}
 
 ${LIB_DIR}/%.so:${SRC_DIR}/lua-%.c
