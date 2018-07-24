@@ -1,31 +1,35 @@
 local skynet = require "skynet"
 local json = require "cjson"
-local ws_client = require "ws.ws_client"
+local ws_client = require "ws.client"
 
-local player = ...
-local player = require "player"
+local player_t = ...
+local player_t = require "player_t"
 
 local NORET = "NORET"
-local socks = {}
+local players = {}
 
 local CMD = {}
 function CMD.new(url)
     local ws = ws_client.new()
-    local player = player.new()
     ws:connect(string.format(url))
-    socks[ws] = player
-    player:on_open(ws)
+    local player = player_t.new(ws)
+    players[ws] = player
+    player:on_open()
 end
 
 function CMD.recv()
-    for ws, player in pairs(socks) do
-        local ret = ws:recv_frame()
-        if ret then
-            print("recv", ret)
-            player:on_message(ret)
+    for ws, player in pairs(players) do
+        while true do
+            local ret = ws:recv_frame()
+            if ret then
+                print("recv", ret)
+                player:on_message(ret)
+            else
+                break
+            end
         end
     end
-    skynet.timeout(100, function()
+    skynet.timeout(10, function()
         CMD.recv()
     end)
 end
