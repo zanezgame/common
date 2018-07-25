@@ -9,7 +9,6 @@ local server = require(server)
 local CMD = {}
 local SOCKET = {}
 local gate
-local agent = {}
 local fd2agent = {} -- socket对应的agent
 local acc2agent = {} -- 每个账号对应的agent
 local free_list = {} -- 空闲的agent list

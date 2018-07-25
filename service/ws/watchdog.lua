@@ -7,15 +7,35 @@ local sockethelper  = require "http.sockethelper"
 local json          = require "cjson"
 local util          = require "util"
 
-local player, port = ...
+local server, player = ...
+assert(server) -- 服务器逻辑(xxx.xxxserver)
+assert(player) -- 玩家逻辑(xxx.xxxplayer)
+
+local server = require(server)
+
 local NORET = "NORET"
 local socks = {} -- id:ws
+local fd2agent = {} -- socket对应的agent
+local acc2agent = {} -- 每个账号对应的agent
+local free_list = {} -- 空闲的agent list
+
+local table_insert = table.insert
+local table_remove = table.remove
+
+local function pop_free_agent()
+    local agent = free_list[#free_list]
+    if agent == 0 then
+        return skynet.newservice("ws/agent", player)
+    end
+    free_list[#free_list] = nil
+    return agent
+end
 
 local function handle_socket(id)
     -- limit request body size to 8192 (you can pass nil to unlimit)
     local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 8192)
     if code then
-        local agent = skynet.newservice("ws/agent", id, player, skynet.self())
+        local agent = pop_free_agent()
         local handler = {}
         function handler.on_open(ws)
             print(string.format("%d::open", ws.id))
@@ -43,21 +63,44 @@ local function handle_socket(id)
 end
 
 local CMD = {}
+function CMD.start(conf, preload)
+    preload = preload or 10     -- 预加载agent数量
+    for i = 1, preload do
+        local agent = skynet.newservice("ws/agent", player, skynet.self())
+        table_insert(free_list, agent)
+    end
+
+    local address = "0.0.0.0:"..conf.port
+    skynet.error("Listening "..address)
+    local fd = assert(socket.listen(address))
+    socket.start(fd , function(fd, addr)
+       --socket.start(fd)
+       --local agent = pop_free_agent()
+       local agent = skynet.newservice("ws/agent", player, watchdog)
+       skynet.call(agent, "lua", "start", fd)
+       fd2agent[fd] = agent
+    end)
+end
+
 function CMD.send(id, msg)
     local ws = socks[id]
     assert(ws)
     ws:send_text(json.encode(msg))
 end
 
-skynet.start(function()
-    local address = "0.0.0.0:"..port
-    skynet.error("Listening "..address)
-    local id = assert(socket.listen(address))
-    socket.start(id , function(id, addr)
-       socket.start(id)
-       pcall(handle_socket, id)
-    end)
+-- 上线后agent绑定acc，下线缓存一段时间
+function CMD.bind_acc(agent, acc)
+    acc2agent[acc] = agent
+end
 
+-- 下线一段时间后调用
+function CMD.free_agent(acc, agent)
+    table_insert(free_list, agent) 
+    acc2agent[acc] = nil
+end
+
+
+skynet.start(function()
     skynet.dispatch("lua", function(_, _, cmd1, ...)
         local ret = NORET
         local f = CMD[cmd1]

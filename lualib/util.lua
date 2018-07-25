@@ -110,45 +110,6 @@ function util.printdump(root, ...)
     LOG(util.dump(root, ...))
 end
 
-function util.object_distance(obj1, obj2)
-    return util.point_distance(obj1.x, obj1.y, obj2.x, obj2.y)
-end
-
-function util.point_distance(x1, y1, x2, y2)
-    return math.sqrt((x1-x2)^2, (y1-y2)^2)
-end
-
-function util.check_collision(obj1, obj2, edge_flag)
-    if edge_flag then
-        return util.check_collision_with_edge(obj1, obj2)
-    end
-    local flag = true
-    if obj1.left >= obj2.left and obj1.left >= obj2.left + obj2.width then
-        flag = false
-    elseif obj1.left <= obj2.left and obj1.left + obj1.width <= obj2.left then
-        flag = false
-    elseif obj1.top >= obj2.top and obj1.top >= obj2.top + obj2.height then 
-        flag = false  
-    elseif obj1.top <= obj2.top and obj1.top + obj1.height <= obj2.top then
-        flag = false  
-    end
-    return flag 
-end
-
-function util.check_collision_with_edge(obj1, obj2)
-    local flag = true
-    if obj1.left > obj2.left and obj1.left > obj2.left + obj2.width then
-        flag = false
-    elseif obj1.left < obj2.left and obj1.left + obj1.width < obj2.left then
-        flag = false
-    elseif obj1.top > obj2.top and obj1.top > obj2.top + obj2.height then 
-        flag = false  
-    elseif obj1.top < obj2.top and obj1.top + obj1.height < obj2.top then
-        flag = false  
-    end
-    return flag 
-end
-
 function util.is_in_list(list, obj)
     for _, o in pairs(list) do
         if o == obj then
@@ -324,6 +285,11 @@ function util.str2tbl(str)
         return
     end
     return load("return " .. str)()
+end
+
+-- 方法本身
+function util.callee()
+    return debug.getinfo(2, "f").func
 end
 
 return util

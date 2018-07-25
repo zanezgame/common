@@ -12,6 +12,11 @@ function sock_M:readline(sep)
    return socket.readline(id,sep)
 end
 
+function sock_M:readall()
+   local id = self.id
+   return socket.readall(id)
+end
+
 function sock_M:write(...)
    local id = self.id
    return socket.write(id,...)

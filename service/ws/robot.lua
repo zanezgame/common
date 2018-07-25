@@ -11,29 +11,26 @@ local ws
 
 local CMD = {}
 function CMD.start(url, account)
-    ws = ws_client:new({timeout = 1})
+    ws = ws_client:new()
     ws:connect(string.format(url))
-    print(ws:set_timeout(1))
     player = player_t.new(ws, account)
     player:on_open()
-end
-
-function CMD.recv()
-    while ws do
-        local ret = ws:recv_frame()
-        if ret then
-            print("recv", ret)
-            player:on_message(ret)
-        else
-            print("done !!!!")
-            break
+    skynet.fork(function()
+        while true do
+            while ws do
+                local ret = ws:recv_frame()
+                if ret then
+                    print("recv", ret)
+                    player:on_message(ret)
+                else
+                    break
+                end
+            end
+            if ws then
+                player:ping()
+            end
+            skynet.sleep(100)
         end
-    end
-    if ws then
-        player:ping()
-    end
-    skynet.timeout(100, function()
-        CMD.recv()
     end)
 end
 
@@ -51,6 +48,5 @@ skynet.start(function()
             skynet.ret(skynet.pack(ret))
         end
     end)
-    CMD.recv()    
 end)
 

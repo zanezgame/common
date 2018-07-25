@@ -1,22 +1,26 @@
 local skynet    = require "skynet"
-local websocket = require "ws.socket"
+local socket    = require "skynet.socket"
 local json      = require "cjson"
 local util      = require "util"
+local ws_server = require "ws.server"
 
-local sock_id, player, watchdog = ...
-sock_id = tonumber(sock_id)
-watchdog = tonumber(watchdog)
+local player, watchdog = ...
 local player = require(player)
+watchdog = tonumber(watchdog)
+
 
 local NORET = "NORET"
 
+local ws
 local CMD = {}
-function CMD.on_open()
-    print("ws on_open")
-end
 
-function CMD.on_message(message)
-    local data = json.decode(message)
+local handler = {}
+function handler.open()
+    print("open")
+end
+function handler.text(t)
+    --print("recv", data)
+    local data = json.decode(t)
     local recv_id = data.id
     if recv_id == "HearBeatPing" then
         -- todo change name
@@ -32,9 +36,15 @@ function CMD.on_message(message)
         })
     end
 end
+function handler.close()
 
-function CMD.on_close()
-    print("ws on_close")
+end
+
+function CMD.start(fd)
+    player:init(watchdog, fd)
+
+    socket.start(fd)
+    ws = ws_server.new(fd, handler)
 end
 
 skynet.start(function()
@@ -55,6 +65,5 @@ skynet.start(function()
             skynet.ret(skynet.pack(ret))
         end
     end)
-    player:init(watchdog, sock_id)
 end)
 
