@@ -6,6 +6,7 @@ assert(player) -- 玩家逻辑(xxx.xxxplayer)
 
 local server = require(server)
 
+local NORET = "NORET"
 local CMD = {}
 local SOCKET = {}
 local gate
@@ -55,6 +56,7 @@ function SOCKET.data(fd, msg)
 end
 
 function CMD.start(conf, preload)
+    server:start()
     preload = preload or 10     -- 预加载agent数量
 	skynet.call(gate, "lua", "open" , conf)
     for i = 1, preload do
@@ -76,15 +78,29 @@ end
 
 skynet.start(function()
 	skynet.dispatch("lua", function(session, source, cmd, subcmd, ...)
-		if cmd == "socket" then
-			local f = SOCKET[subcmd]
-			f(...)
-			-- socket api don't need return
-		else
-			local f = assert(CMD[cmd])
-			skynet.ret(skynet.pack(f(subcmd, ...)))
-		end
-	end)
+        local function ret_value(noret, ...)
+            if noret ~= NORET then
+                skynet.error("%s %s", cmd, noret)
+                skynet.ret(skynet.pack(noret, ...))
+            end
+        end
+
+        local ret = NORET
+        if cmd == "socket" then
+            local f = SOCKET[subcmd]
+            f(...)
+            return
+        elseif CMD[cmd] then
+            ret_value(CMD[cmd](subcmd, ...))
+        else
+            local f = assert(server[cmd], cmd)
+            if type(f) == "function" then
+                ret_value(f(server, subcmd, ...))
+            else
+                ret_value(f[subcmd](f, ...))
+            end
+        end
+    end)
 
 	gate = skynet.newservice("gate")
     
