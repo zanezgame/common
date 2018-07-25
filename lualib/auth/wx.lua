@@ -3,7 +3,7 @@
 --
 
 local skynet    = require "skynet"
-local http      = require "http_helper"
+local http      = require "web.http_helper"
 local json      = require "cjson"
 local sha256    = require "auth.sha256"
 
