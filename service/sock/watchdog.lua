@@ -1,4 +1,5 @@
 local skynet = require "skynet"
+local util = require "util"
 
 local server, player = ...
 assert(server) -- 服务器逻辑(xxx.xxxserver)
@@ -6,7 +7,6 @@ assert(player) -- 玩家逻辑(xxx.xxxplayer)
 
 local server = require(server)
 
-local NORET = "NORET"
 local CMD = {}
 local SOCKET = {}
 local gate
@@ -78,26 +78,18 @@ end
 
 skynet.start(function()
 	skynet.dispatch("lua", function(session, source, cmd, subcmd, ...)
-        local function ret_value(noret, ...)
-            if noret ~= NORET then
-                skynet.error("%s %s", cmd, noret)
-                skynet.ret(skynet.pack(noret, ...))
-            end
-        end
-
-        local ret = NORET
         if cmd == "socket" then
             local f = SOCKET[subcmd]
             f(...)
             return
         elseif CMD[cmd] then
-            ret_value(CMD[cmd](subcmd, ...))
+            util.ret(CMD[cmd](subcmd, ...))
         else
             local f = assert(server[cmd], cmd)
             if type(f) == "function" then
-                ret_value(f(server, subcmd, ...))
+                util.ret(f(server, subcmd, ...))
             else
-                ret_value(f[subcmd](f, ...))
+                util.ret(f[subcmd](f, ...))
             end
         end
     end)

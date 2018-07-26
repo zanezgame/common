@@ -2,6 +2,14 @@ local skynet = require "skynet"
 local LOG = skynet.error
 
 local util = {}
+-- 处理skynet.send的消息
+util.NORET = "NORET"
+function util.ret(noret, ...)
+    if noret ~= "NORET" then
+        skynet.ret(skynet.pack(noret, ...))
+    end
+end
+
 function util.to_version_num(version)
     local v1, v2, v3 = string.match(version, "(%d+)%.(%d+)%.(%d+)")
 	if not v1 then

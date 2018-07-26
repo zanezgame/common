@@ -1,3 +1,6 @@
+-- Http 请求 get post
+-- 节点启动时需要执行 sname.start(sname.WEB)
+--
 local skynet    = require "skynet"
 local json      = require "cjson"
 local sname     = require "sname"

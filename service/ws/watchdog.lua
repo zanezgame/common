@@ -12,7 +12,6 @@ assert(player) -- 玩家逻辑(xxx.xxxplayer)
 
 local server = require(server)
 
-local NORET = "NORET"
 local socks = {} -- id:ws
 local fd2agent = {} -- socket对应的agent
 local acc2agent = {} -- 每个账号对应的agent
@@ -65,7 +64,7 @@ local CMD = {}
 function CMD.start(conf, preload)
     preload = preload or 10     -- 预加载agent数量
     for i = 1, preload do
-        local agent = skynet.newservice("ws/agent", player, skynet.self())
+        local agent = skynet.newservice("ws/agent", player)
         table_insert(free_list, agent)
     end
 
@@ -73,10 +72,8 @@ function CMD.start(conf, preload)
     skynet.error("Listening "..address)
     local fd = assert(socket.listen(address))
     socket.start(fd , function(fd, addr)
-       --socket.start(fd)
-       --local agent = pop_free_agent()
-       local agent = skynet.newservice("ws/agent", player, watchdog)
-       skynet.call(agent, "lua", "start", fd)
+       local agent = pop_free_agent()
+       skynet.call(agent, "lua", "start", skynet.self(), fd)
        fd2agent[fd] = agent
     end)
 end
@@ -101,13 +98,8 @@ end
 
 skynet.start(function()
     skynet.dispatch("lua", function(_, _, cmd1, ...)
-        local ret = NORET
         local f = CMD[cmd1]
-        if f then
-            ret = f(...)
-        end
-        if ret ~= NORET then
-            skynet.ret(skynet.pack(ret))
-        end
+        assert(f, cmd1)
+        util.ret(f(...))
     end)
 end)

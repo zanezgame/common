@@ -1,6 +1,7 @@
 local skynet = require "skynet"
 local socket = require "skynet.socket"
 local sproto = require "sproto"
+local util   = require "util"
 
 local player = ...
 player = require(player)
@@ -45,8 +46,7 @@ end
 
 skynet.start(function()
 	skynet.dispatch("lua", function(_,_, command, ...)
-		skynet.trace()
 		local f = CMD[command]
-		skynet.ret(skynet.pack(f(...)))
+		util.ret(f(...))
 	end)
 end)

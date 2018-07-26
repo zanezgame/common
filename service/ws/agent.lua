@@ -4,12 +4,8 @@ local json      = require "cjson"
 local util      = require "util"
 local ws_server = require "ws.server"
 
-local player, watchdog = ...
+local player = ...
 local player = require(player)
-watchdog = tonumber(watchdog)
-
-
-local NORET = "NORET"
 
 local ws
 local CMD = {}
@@ -40,7 +36,7 @@ function handler.close()
 
 end
 
-function CMD.start(fd)
+function CMD.start(watchdog, fd)
     player:init(watchdog, fd)
 
     socket.start(fd)
@@ -49,20 +45,16 @@ end
 
 skynet.start(function()
     skynet.dispatch("lua", function(_, _, cmd1, cmd2, ...)
-        local ret = NORET
         local f = CMD[cmd1]
         if f then
-            ret = f(cmd2, ...)
+            util.ret(f(cmd2, ...))
         elseif player[cmd1] then
             local module = player[cmd1]
             if type(module) == "function" then
-                ret = module(player, cmd2, ...)
+                util.ret(module(player, cmd2, ...))
             else
-                ret = module[cmd2](module, ...)
+                util.ret(module[cmd2](module, ...))
             end
-        end
-        if ret ~= NORET then
-            skynet.ret(skynet.pack(ret))
         end
     end)
 end)
