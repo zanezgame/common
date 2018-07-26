@@ -12,10 +12,9 @@ local CMD = {}
 
 local handler = {}
 function handler.open()
-    print("open")
 end
 function handler.text(t)
-    --print("recv", data)
+    skynet.error("recv", t)
     local data = json.decode(t)
     local recv_id = data.id
     if recv_id == "HearBeatPing" then
@@ -26,10 +25,10 @@ function handler.text(t)
     assert(player[recv_id], "net handler nil")
     if player[recv_id] then
         local msg = player[recv_id](player, data.msg) or {}
-        return json.encode({
-            id = recv_id,
+        ws:send_text(json.encode({
+            id = resp_id,
             msg = msg,
-        })
+        }))
     end
 end
 function handler.close()
@@ -37,10 +36,10 @@ function handler.close()
 end
 
 function CMD.start(watchdog, fd)
-    player:init(watchdog, fd)
-
     socket.start(fd)
     ws = ws_server.new(fd, handler)
+
+    player:init(watchdog, ws)
 end
 
 skynet.start(function()

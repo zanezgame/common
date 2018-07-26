@@ -10,10 +10,10 @@ local player
 local ws
 
 local CMD = {}
-function CMD.start(url, account)
+function CMD.start(url, acc)
     ws = ws_client:new()
     ws:connect(string.format(url))
-    player = player_t.new(ws, account)
+    player = player_t.new(ws, acc)
     player:on_open()
     skynet.fork(function()
         while true do

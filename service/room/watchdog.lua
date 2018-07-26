@@ -30,6 +30,7 @@ function CMD.start(conf, preload)
         local agent = skynet.newservice("room/agent", room)
         table_insert(free_list, agent)
     end
+    manager:start(skynet.self())
 end
 
 skynet.start(function()
@@ -39,8 +40,8 @@ skynet.start(function()
         if f then
             util.ret(f(...))
         else
-            f = assert(room[cmd1])
-            util.ret(f(room, ...))
+            f = assert(manager[cmd1])
+            util.ret(f(manager, ...))
         end
     end)
 end)

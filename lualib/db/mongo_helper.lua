@@ -82,20 +82,20 @@ function M.drop(collection_name)
     return db[db_name][collection_name]:drop()
 end
 
-function M.query_player(account, default_player)
+function M.query_player(acc, default_player)
     local col = collection("player") 
-    local ret = col:findOne({account = account})
+    local ret = col:findOne({acc = acc})
     if not ret and default_player then
         col:safe_insert(default_player)
-        ret = col:findOne({account = account})
+        ret = col:findOne({acc = acc})
     end
     return util.key_string_to_number(ret)
 end
 
-function M.save_player(account, data)
+function M.save_player(acc, data)
     data = util.key_number_to_string(data)
     local col = collection("player")
-    return col:findAndModify({query = {account = account}, update = data})
+    return col:findAndModify({query = {acc = acc}, update = data})
 end
 
 function M.auto_id()

@@ -22,7 +22,7 @@ local table_remove = table.remove
 
 local function pop_free_agent()
     local agent = free_list[#free_list]
-    if agent == 0 then
+    if not agent then
         return skynet.newservice("ws/agent", player)
     end
     free_list[#free_list] = nil
