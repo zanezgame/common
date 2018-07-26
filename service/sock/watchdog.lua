@@ -32,9 +32,9 @@ local function close_socket(fd)
 end
 
 function SOCKET.open(fd, addr)
-	skynet.error("New client from : " .. addr)
+	skynet.error("New client from : " .. addr, fd)
 	fd2agent[fd] = pop_free_agent()
-	skynet.call(fd2agent[fd], "lua", "start", { gate = gate, client = fd, watchdog = skynet.self() })
+	skynet.call(fd2agent[fd], "lua", "start", { gate = gate, fd = fd, watchdog = skynet.self() })
 end
 
 function SOCKET.close(fd)
@@ -53,6 +53,7 @@ function SOCKET.warning(fd, size)
 end
 
 function SOCKET.data(fd, msg)
+    pront("socket data", fd, msg)
 end
 
 function CMD.start(conf, preload)

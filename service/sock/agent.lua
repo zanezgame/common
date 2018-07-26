@@ -11,23 +11,23 @@ local WATCHDOG
 local GATE
 
 local CMD = {}
-local client_fd
 
 local function send_package(pack)
 	local package = string.pack(">s2", pack)
-	socket.write(client_fd, package)
+	socket.write(FD, package)
 end
 
 skynet.register_protocol {
 	name = "client",
 	id = skynet.PTYPE_CLIENT,
 	unpack = function (msg, sz)
-		return host:dispatch(msg, sz)
+        print("&&&&&& unpack")
+		return msg, sz
 	end,
-	dispatch = function (fd, _, type, ...)
+	dispatch = function (fd, _, msg, sz)
+        print("recv", msg, sz)
 		assert(fd == FD)	-- You can use fd to reply message
 		skynet.ignoreret()	-- session is fd, don't call skynet.ret
-		skynet.trace()
 	end
 }
 
@@ -35,8 +35,10 @@ function CMD.start(conf)
 	FD = conf.fd
 	GATE = conf.gate
     WATCHDOG = conf.WATCHDOG
-
-	skynet.call(GATE, "lua", "forward", fd)
+    
+	skynet.call(GATE, "lua", "forward", FD)
+    print("agent start &&&&&&&&&&&", FD)
+    send_package("hello")
 end
 
 function CMD.disconnect()

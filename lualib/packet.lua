@@ -9,19 +9,19 @@ function M.pack(opcode, server_sn, client_sn, crypt_type, crypt_key, buff, sz)
     data:write_ushort(client_sn)
     data:write_ubyte(crypt_type)
     data:write_ubyte(crypt_key)
-    data:write_bytes(buff)
-    return data:pack()
+    data:write_bytes(buff, sz)
+    return data:pack() -- sock_sz, sock_buff
 end
-
-function M.unpack(buff, sz)
-    local data      = c.new(sz, buff) 
+function M.unpack(sock_buff, sock_sz)
+    local data      = c.new(sock_sz, sock_buff) 
     local total     = data:read_ushort()
     local opcode    = data:read_ushort()
     local server_sn = data:read_ushort()
     local client_sn = data:read_ushort()
     local crypt_type= data:read_ubyte()
     local crypt_key = data:read_ubyte()
-    local buff      = data:read_bytes(total-10)
+    local sz        = total - 10
+    local buff      = data:read_bytes(sz)
     return opcode, server_sn, client_sn, crypt_type, crypt_key, buff, sz
 end
 return M

@@ -12,8 +12,9 @@ function M.start(host, port)
 
     skynet.fork(function()
         while true do
-            local ret = socket.readline(fd)
-            print("recv &&&&")
+            local ret = socket.read(fd)
+            print("recv &&&&", ret)
+            skynet.sleep(100)
         end
     end)
 end
@@ -26,8 +27,9 @@ function M.unpack(buff)
 
 end
 
-function M.send()
-    
+function M.send(data)
+    data = string.pack(">s2", data)
+    socket.write(fd, data) 
 end
 
 function M.call()

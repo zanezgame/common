@@ -318,10 +318,18 @@ static int _read_bytes(lua_State *L)
 
 static int _write_bytes(lua_State *L)
 {
+    lua_settop(L, 3);
     size_t len;
-    const char *data = luaL_checklstring(L, 2, &len);
+    const void *data;
+    if (lua_islightuserdata(L, 2)) {
+        data = lua_touserdata(L, 2);
+        len = luaL_checkinteger(L, 3);
+    } else {
+        data = (void *)luaL_checklstring(L, 2, &len);
+    }
+
     packet_t *self = check_write_packet(L, len);
-    memcpy((char *)self->pos, data, len);
+    memcpy((void *)self->pos, data, len);
     self->pos += len;
     return 0;
 }
