@@ -363,7 +363,7 @@ static int _free(lua_State *L)
     return 0;
 }
 
-LUALIB_API int luaopen_packet(lua_State *L)
+LUALIB_API int luaopen_cpacket(lua_State *L)
 {
     luaL_checkversion(L);
     
