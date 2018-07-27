@@ -10,6 +10,14 @@ function util.ret(noret, ...)
     end
 end
 
+-- 有需要的节点在启动时调用
+function util.env_protobuf(path)
+    debug.getregistry().PROTOBUF_ENV = protobuf_c._env_new()
+    local protobuf = require "protobuf"
+    protobuf.register_file(path)
+end
+
+
 function util.to_version_num(version)
     local v1, v2, v3 = string.match(version, "(%d+)%.(%d+)%.(%d+)")
 	if not v1 then

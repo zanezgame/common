@@ -351,8 +351,8 @@ static int _write_string(lua_State *L)
 static int _pack(lua_State *L)
 {
     packet_t *self = check_packet();
-    lua_pushinteger(L, self->pos - self->data);
     lua_pushlightuserdata(L, self->data);
+    lua_pushinteger(L, self->pos - self->data);
     self->data = NULL;
     
     return 2;

@@ -1,6 +1,6 @@
 local skynet = require "skynet"
 local socket = require "skynet.socket"
-local sproto = require "sproto"
+local packet = require "packet"
 local util   = require "util"
 
 local player = ...
@@ -20,12 +20,12 @@ end
 skynet.register_protocol {
 	name = "client",
 	id = skynet.PTYPE_CLIENT,
-	unpack = function (msg, sz)
-        print("&&&&&& unpack")
-		return msg, sz
+	unpack = function (buff, sz)
+        print("recv buff", buff, sz)
+		return packet.unpack(buff, sz)
 	end,
-	dispatch = function (fd, _, msg, sz)
-        print("recv", msg, sz)
+	dispatch = function (fd, _, ...)
+        print("recv", ...)
 		assert(fd == FD)	-- You can use fd to reply message
 		skynet.ignoreret()	-- session is fd, don't call skynet.ret
 	end
