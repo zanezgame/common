@@ -23,7 +23,7 @@ function M.pack(opcode, csn, ssn, crypt_type, crypt_key, buff, sz)
     return data:pack() -- sock_buff, sock_sz
 end
 function M.unpack(sock_buff, sock_sz)
-    local data      = core.new(sock_sz, sock_buff) 
+    local data      = core.new(sock_buff, sock_sz) 
     print("unpack", data:dump())
     --local total     = data:read_ushort()
     local opcode    = data:read_ushort()
@@ -31,7 +31,7 @@ function M.unpack(sock_buff, sock_sz)
     local ssn       = data:read_ushort()
     local crypt_type= data:read_ubyte()
     local crypt_key = data:read_ubyte()
-    local sz        = sock_sz - 10
+    local sz        = sock_sz and sock_sz - 10 or #sock_buff - 10
     local buff      = data:read_bytes(sz)
     return opcode, csn, ssn, crypt_type, crypt_key, buff, sz
 end

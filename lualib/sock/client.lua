@@ -2,6 +2,7 @@
 local skynet    = require "skynet"
 local socket    = require "skynet.socket"
 local packet    = require "packet"
+local packetc   = require "packet.core"
 local protobuf  = require "protobuf"
 local opcode    = require "def.opcode"
 local util      = require "util"
@@ -32,7 +33,7 @@ function M:start()
 
     skynet.fork(function()
         while true do
-            local buff = socket.read(self.fd, sz)
+            local buff = socket.read(self.fd)
             self:recv_package(buff)
             skynet.sleep(100)
         end
@@ -40,8 +41,18 @@ function M:start()
 end
 
 function M:recv_package(sock_buff)
-    print("recv &&&&", sock_buff)
-    local op, csn, ssn, crypt_type, crypt_key, buff, sz = packet.unpackstring(sock_buff)
+    print("recv &&&&", sock_buff, #sock_buff)
+    local data      = packetc.new(sock_buff) 
+    print("unpack", data:dump())
+    local total     = data:read_ushort()
+    local op        = data:read_ushort()
+    local csn       = data:read_ushort()
+    local ssn       = data:read_ushort()
+    local crypt_type= data:read_ubyte()
+    local crypt_key = data:read_ubyte()
+    local sz        = #sock_buff - 10
+    local buff      = data:read_bytes(sz)
+    --local op, csn, ssn, crypt_type, crypt_key, buff, sz = packet.unpack(sock_buff)
     print(op, csn ,ssn, crypt_type, crypt_key, buff, sz)
     self.ssn = ssn
 
@@ -53,6 +64,7 @@ function M:recv_package(sock_buff)
     end
 
     local data = protobuf.decode(opname, buff, sz)
+    print(data)
     util.printdump(data)
 end
 

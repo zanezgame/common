@@ -64,6 +64,9 @@ function CMD.start(conf)
         local agent = skynet.newservice("sock/agent", player)
         table_insert(free_list, agent)
     end
+
+    
+    util.init_proto_env(conf.proto)
 end
 
 -- 上线后agent绑定acc，下线缓存一段时间

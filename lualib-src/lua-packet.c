@@ -22,18 +22,23 @@ typedef struct {
 
 static int _new(lua_State *L)
 {
-    lua_settop(L, 3);
+	lua_settop(L, 3);
     packet_t *self = (packet_t *)lua_newuserdata(L, sizeof(*self));
-    size_t len = (size_t)luaL_checkinteger(L, 1);
+    size_t len;
     
-    if (lua_isuserdata(L, 2)) {
+    if (lua_type(L, 1) == LUA_TSTRING) {
+        self->data = (unsigned char *)lua_tolstring(L, 1, &len);
+        self->owner = 0;
+    } else if (lua_isuserdata(L, 1)) {
+        self->data = (unsigned char *)lua_touserdata(L, 1);
+        len = (size_t)luaL_checkinteger(L, 2);
         self->owner = lua_toboolean(L, 3);
-        self->data = (unsigned char *)lua_touserdata(L, 2);
     } else {
+        len = (size_t)luaL_checkinteger(L, 1);
         self->data = (unsigned char *)malloc(len);
         self->owner = 1;
     }
-    
+
     self->pos = self->data;
     self->end = self->data + len;
     
@@ -310,10 +315,6 @@ static int _write_double(lua_State *L)
 static int _read_bytes(lua_State *L)
 {
     int len = (int)luaL_checkinteger(L, 2);
-    if (len == 0) {
-        lua_pushnil(L);
-        return 1;
-    }
     packet_t *self = check_read_packet(L, len);
     lua_pushlightuserdata(L, self->pos);
     self->pos += len;
@@ -345,9 +346,6 @@ static int _write_bytes(lua_State *L)
 static int _read_string(lua_State *L)
 {
     int len = (int)luaL_checkinteger(L, 2);
-    if (len == 0) {
-        return 0;
-    }
     packet_t *self = check_read_packet(L, len);
     lua_pushlstring(L, (const char *)self->pos, len);
     self->pos += len;
