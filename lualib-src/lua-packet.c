@@ -75,7 +75,7 @@ static packet_t *check_write_packet(lua_State *L, size_t size)
 {
     packet_t *self = check_packet();
     
-    if (!(self->data && self->owner && self->end - self->pos >= 1))
+    if (!(self->data && self->owner && self->end - self->pos >= size))
         luaL_error(L, "no more data, owner=%d", self->owner);
     
     return self;
@@ -310,6 +310,10 @@ static int _write_double(lua_State *L)
 static int _read_bytes(lua_State *L)
 {
     int len = (int)luaL_checkinteger(L, 2);
+    if (len == 0) {
+        lua_pushnil(L);
+        return 1;
+    }
     packet_t *self = check_read_packet(L, len);
     lua_pushlightuserdata(L, self->pos);
     self->pos += len;
@@ -327,6 +331,10 @@ static int _write_bytes(lua_State *L)
     } else {
         data = (void *)luaL_checklstring(L, 2, &len);
     }
+
+    if (len == 0) {
+        return 0;
+    }
     
     packet_t *self = check_write_packet(L, len);
     memcpy((void *)self->pos, data, len);
@@ -337,6 +345,9 @@ static int _write_bytes(lua_State *L)
 static int _read_string(lua_State *L)
 {
     int len = (int)luaL_checkinteger(L, 2);
+    if (len == 0) {
+        return 0;
+    }
     packet_t *self = check_read_packet(L, len);
     lua_pushlstring(L, (const char *)self->pos, len);
     self->pos += len;
@@ -371,6 +382,7 @@ static int _dump(lua_State *L)
         uint8_t c = (uint8_t)*start++;
         luaL_addchar(&b, X[c >> 4 & 0xF]);
         luaL_addchar(&b, X[c & 0xF]);
+        luaL_addchar(&b, ' ');
     }
     luaL_pushresult(&b);
     return 1;

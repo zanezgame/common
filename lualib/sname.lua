@@ -2,6 +2,7 @@
 local skynet = require "skynet.manager"
 local reg = {
     WEB = {".webclient",  "web/webclient"},
+    PROTO = {".proto_env",  "proto_env"},
 }
 
 local M = {}

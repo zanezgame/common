@@ -56,11 +56,11 @@ function SOCKET.data(fd, msg)
     pront("socket data", fd, msg)
 end
 
-function CMD.start(conf, preload)
+function CMD.start(conf)
     server:start()
-    preload = preload or 10     -- 预加载agent数量
+    conf.preload = conf.preload or 10     -- 预加载agent数量
 	skynet.call(gate, "lua", "open" , conf)
-    for i = 1, preload do
+    for i = 1, conf.preload do
         local agent = skynet.newservice("sock/agent", player)
         table_insert(free_list, agent)
     end

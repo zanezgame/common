@@ -11,10 +11,18 @@ function util.ret(noret, ...)
 end
 
 -- 有需要的节点在启动时调用
-function util.env_protobuf(path)
-    debug.getregistry().PROTOBUF_ENV = protobuf_c._env_new()
-    local protobuf = require "protobuf"
-    protobuf.register_file(path)
+function util.init_proto_env(path)
+    skynet.newservice("proto_env", path)  
+end
+
+-- 获取节点内的protobuf
+function util.get_protobuf()
+    local sname = require "sname"
+    local protobuf_env = skynet.call(sname.PROTO, "lua", "get_protobuf_env")
+    assert(type(protobuf_env) == "userdata")
+    assert(not package.loaded["protobuf"])
+    debug.getregistry().PROTOBUF_ENV = protobuf_env
+    return require "protobuf"
 end
 
 
