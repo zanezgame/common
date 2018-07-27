@@ -311,7 +311,7 @@ static int _read_bytes(lua_State *L)
 {
     int len = (int)luaL_checkinteger(L, 2);
     packet_t *self = check_read_packet(L, len);
-    lua_pushlstring(L, (const char *)self->pos, len);
+    lua_pushlightuserdata(L, self->pos);
     self->pos += len;
     return 1;
 }
@@ -327,11 +327,25 @@ static int _write_bytes(lua_State *L)
     } else {
         data = (void *)luaL_checklstring(L, 2, &len);
     }
-
+    
     packet_t *self = check_write_packet(L, len);
     memcpy((void *)self->pos, data, len);
     self->pos += len;
     return 0;
+}
+
+static int _read_string(lua_State *L)
+{
+    int len = (int)luaL_checkinteger(L, 2);
+    packet_t *self = check_read_packet(L, len);
+    lua_pushlstring(L, (const char *)self->pos, len);
+    self->pos += len;
+    return 1;
+}
+
+static int _write_string(lua_State *L)
+{
+    return _write_bytes(L);
 }
 
 static int _pack(lua_State *L)
@@ -371,7 +385,7 @@ static int _free(lua_State *L)
     return 0;
 }
 
-LUALIB_API int luaopen_cpacket(lua_State *L)
+LUALIB_API int luaopen_packet_core(lua_State *L)
 {
     luaL_checkversion(L);
     
@@ -401,6 +415,8 @@ LUALIB_API int luaopen_cpacket(lua_State *L)
         {"write_double", _write_double},
         {"read_bytes", _read_bytes},
         {"write_bytes", _write_bytes},
+        {"read_string", _read_string},
+        {"write_string", _write_string},
         {"pack", _pack},
         {"dump", _dump},
         {"free", _free},

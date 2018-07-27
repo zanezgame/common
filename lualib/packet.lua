@@ -1,8 +1,8 @@
-local c = require "cpacket"
+local core = require "packet.core"
 local M = {}
 function M.pack(opcode, server_sn, client_sn, crypt_type, crypt_key, buff, sz)
     local total = sz + 10
-    local data = c.new(total)
+    local data = core.new(total)
     data:write_ushort(total)
     data:write_ushort(opcode)
     data:write_ushort(server_sn)
@@ -13,7 +13,7 @@ function M.pack(opcode, server_sn, client_sn, crypt_type, crypt_key, buff, sz)
     return data:pack() -- sock_sz, sock_buff
 end
 function M.unpack(sock_buff, sock_sz)
-    local data      = c.new(sock_sz, sock_buff) 
+    local data      = core.new(sock_sz, sock_buff) 
     local total     = data:read_ushort()
     local opcode    = data:read_ushort()
     local server_sn = data:read_ushort()

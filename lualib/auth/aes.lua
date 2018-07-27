@@ -1,4 +1,4 @@
-local caes = require "caes"
+local caes = require "aes.core"
 local aes = {}
 function aes.decrypt(data, key, iv)
     local err, ret = caes.decrypt(data, key, iv)
