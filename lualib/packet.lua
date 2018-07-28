@@ -8,9 +8,11 @@ local core = require "packet.core"
 -- buff sz 要发送的数据和长度
 -- sock_buff sock_sz 缓冲区的数据和长度
 
+local HEADER_SIZE = 10
+
 local M = {}
 function M.pack(opcode, csn, ssn, crypt_type, crypt_key, buff, sz)
-    local total = sz + 10
+    local total = sz + HEADER_SIZE
     local data = core.new(total)
     data:write_ushort(total)
     data:write_ushort(opcode)
@@ -19,19 +21,19 @@ function M.pack(opcode, csn, ssn, crypt_type, crypt_key, buff, sz)
     data:write_ubyte(crypt_type)
     data:write_ubyte(crypt_key)
     data:write_bytes(buff, sz)
-    print("pack", data:dump())
     return data:pack() -- sock_buff, sock_sz
 end
 function M.unpack(sock_buff, sock_sz)
+    assert(type(sock_buff) == "userdata")
+    assert(type(sock_sz) == "number")
     local data      = core.new(sock_buff, sock_sz) 
-    print("unpack", data:dump())
-    --local total     = data:read_ushort()
+    --local total     = data:read_ushort() -- skynet抠掉了这2个字节
     local opcode    = data:read_ushort()
     local csn       = data:read_ushort()
     local ssn       = data:read_ushort()
     local crypt_type= data:read_ubyte()
     local crypt_key = data:read_ubyte()
-    local sz        = sock_sz and sock_sz - 10 or #sock_buff - 10
+    local sz        = (sock_sz or #sock_buff) - HEADER_SIZE
     local buff      = data:read_bytes(sz)
     return opcode, csn, ssn, crypt_type, crypt_key, buff, sz
 end

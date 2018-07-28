@@ -22,11 +22,9 @@ local function send_package(op, tbl)
     _ssn = _ssn + 1
     local data, len
     protobuf.encode(opcode.toname(op), tbl, function(buffer, bufferlen)
-        print("protobuf", bufferlen)
         data, len = packet.pack(op, _csn, _ssn, 
             _crypt_type, _crypt_key, buffer, bufferlen)
     end)
-    print("send", data, len)
 	socket.write(FD, data, len + 2)
 
 end
@@ -35,7 +33,6 @@ skynet.register_protocol {
 	name = "client",
 	id = skynet.PTYPE_CLIENT,
 	unpack = function (buff, sz)
-        print("recv buff", buff, sz)
 		return packet.unpack(buff, sz)
 	end,
 	dispatch = function (fd, _, op, csn, ssn, crypt_type, crypt_key, buff, sz)

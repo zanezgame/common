@@ -41,16 +41,14 @@ function M:start()
 end
 
 function M:recv_package(sock_buff)
-    print("recv &&&&", sock_buff, #sock_buff)
     local data      = packetc.new(sock_buff) 
-    print("unpack", data:dump())
     local total     = data:read_ushort()
     local op        = data:read_ushort()
     local csn       = data:read_ushort()
     local ssn       = data:read_ushort()
     local crypt_type= data:read_ubyte()
     local crypt_key = data:read_ubyte()
-    local sz        = #sock_buff - 10
+    local sz        = #sock_buff - 10 - 2
     local buff      = data:read_bytes(sz)
     --local op, csn, ssn, crypt_type, crypt_key, buff, sz = packet.unpack(sock_buff)
     print(op, csn ,ssn, crypt_type, crypt_key, buff, sz)
@@ -73,7 +71,6 @@ function M:send(op, tbl)
     
     local data, len
     protobuf.encode(opcode.toname(op), tbl, function(buffer, bufferlen)
-        print("protobuf", bufferlen)
         data, len = packet.pack(op, self.csn, self.ssn, 
             self.crypt_type, self.crypt_key, buffer, bufferlen)
     end)
