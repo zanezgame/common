@@ -35,7 +35,6 @@ function M:start()
         while true do
             local buff = socket.read(self.fd)
             self:recv_package(buff)
-            skynet.sleep(100)
         end
     end)
 end
