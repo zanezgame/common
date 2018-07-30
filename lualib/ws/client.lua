@@ -47,7 +47,6 @@ function _M.connect(self, uri, opts)
     local host = parsed.host
     local port = parsed.port
     local path = parsed.path
-    print(host,port)
     if not port then
         port = 80
     end

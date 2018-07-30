@@ -4,8 +4,8 @@ local packet    = require "packet"
 local util      = require "util"
 local opcode    = require "def.opcode"
 
-local player = ...
-player = require(player)
+local player    = ...
+player          = require(player)
 
 local FD
 local WATCHDOG

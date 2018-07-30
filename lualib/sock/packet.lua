@@ -33,7 +33,7 @@ function M.unpack(sock_buff, sock_sz)
     local ssn       = data:read_ushort()
     local crypt_type= data:read_ubyte()
     local crypt_key = data:read_ubyte()
-    local sz        = (sock_sz or #sock_buff) - HEADER_SIZE
+    local sz        = sock_sz - HEADER_SIZE
     local buff      = data:read_bytes(sz)
     return opcode, csn, ssn, crypt_type, crypt_key, buff, sz
 end

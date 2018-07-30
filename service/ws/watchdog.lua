@@ -61,8 +61,10 @@ local function handle_socket(id)
 end
 
 local CMD = {}
-function CMD.start(conf, preload)
-    preload = preload or 10     -- 预加载agent数量
+function CMD.start(conf)
+    util.init_proto_env(conf.proto)
+
+    preload = conf.preload or 10     -- 预加载agent数量
     for i = 1, preload do
         local agent = skynet.newservice("ws/agent", player)
         table_insert(free_list, agent)

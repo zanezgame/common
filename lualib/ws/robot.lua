@@ -1,5 +1,5 @@
 local skynet    = require "skynet"
-local packet    = require "packet"
+local packet    = require "ws.packet"
 local protobuf  = require "protobuf"
 local opcode    = require "def.opcode"
 local util      = require "util"
@@ -14,7 +14,7 @@ function M.new(...)
     return setmetatable(t, mt)
 end
 
-function M:ctor(url, send_type, player)
+function M:ctor(url, player, send_type)
     self.url = url
     self.send_type = send_type or "text"
     self.ws = ws_client:new()
@@ -23,10 +23,11 @@ end
 
 function M:start()
     assert(self.ws)
+    self.ws:connect(self.url)
 
     skynet.fork(function()
         while true do
-            local data, type, err = ws:recv_frame()
+            local data, type, err = self.ws:recv_frame()
             if t == "text" then
                 self:recv_text(data) 
             elseif t == "binary" then
@@ -44,20 +45,19 @@ function M:send(...)
     end
 end
 
-function M:recv_binary(sock_buff)
-    local data      = packetc.new(sock_buff) 
-    local total     = data:read_ushort()
-    local op        = data:read_ushort()
-    local csn       = data:read_ushort()
-    local ssn       = data:read_ushort()
-    local crypt_type= data:read_ubyte()
-    local crypt_key = data:read_ubyte()
-    local sz        = #sock_buff - 10 - 2
-    local buff      = data:read_bytes(sz)
-    --local op, csn, ssn, crypt_type, crypt_key, buff, sz = packet.unpack(sock_buff)
-    print(op, csn ,ssn, crypt_type, crypt_key, buff, sz)
-    self.ssn = ssn
+function M:recv_text(text)
 
+end
+
+function M:send_text(id, msg)
+    self.ws:send_text(json.encode({
+        id = resp_id,
+        msg = msg,
+    }))
+end
+
+function M:recv_binary(sock_buff)
+    local op, buff = string.unpack(">Hs2", sock_buff)
     local opname = opcode.toname(op)
     local modulename = opcode.tomodule(op)
     local simplename = opcode.tosimplename(op)
@@ -71,17 +71,9 @@ function M:recv_binary(sock_buff)
 end
 
 function M:send_binary(op, tbl)
-    self.csn = self.csn + 1
-    
-    local data, len
-    protobuf.encode(opcode.toname(op), tbl, function(buffer, bufferlen)
-        data, len = packet.pack(op, self.csn, self.ssn, 
-            self.crypt_type, self.crypt_key, buffer, bufferlen)
-    end)
-
-    print("send", data, len)
-    socket.write(self.fd, data, len+2)
-    --socket.write(self.fd, string.pack(">s2", data) )
+    local data = protobuf.encode(opcode.toname(op), tbl)
+    --print("send", data, #data)
+    self.ws:send_binary(string.pack(">Hs2", op, data))
 end
 
 function M:call()
