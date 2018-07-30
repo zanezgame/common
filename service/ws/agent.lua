@@ -19,6 +19,8 @@ function handler.open()
 end
 
 function handler.text(t)
+    send_type = "text"
+
     skynet.error("recv", t)
     local data = json.decode(t)
     local recv_id = data.id
@@ -38,6 +40,8 @@ function handler.text(t)
 end
 
 function handler.binary(sock_buff)
+    send_type = "binary"
+
     local op, buff = string.unpack(">Hs2", sock_buff)
     local opname = opcode.toname(op)
     local modulename = opcode.tomodule(op)
@@ -94,10 +98,7 @@ function player:send(...)
     end
 end
 
-function CMD.start(watchdog, fd, type)
-    send_type = type or "binary"
-    assert(send_type == "binary" or send_type == "text")
-
+function CMD.start(watchdog, fd)
     socket.start(fd)
     ws = ws_server.new(fd, handler)
     player:init(watchdog, ws)

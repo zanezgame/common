@@ -67,9 +67,10 @@ function M:_suspended(co, op, ...)
 end
 
 function M:_recv_text(text)
-    local data = json.decode(t)
+    local data = json.decode(text)
+    util.printdump(data)
     local recv_id = data.id
-    local req_id = "C2s"..string.match(recv_id, "C2s(.+)")
+    local req_id = "C2s"..string.match(recv_id, "S2c(.+)")
     if self[recv_id] then
         self[recv_id](self, data.msg)     
     end
@@ -83,7 +84,7 @@ end
 
 function M:_send_text(id, msg)
     self._ws:send_text(json.encode({
-        id = resp_id,
+        id = id,
         msg = msg,
     }))
 end
