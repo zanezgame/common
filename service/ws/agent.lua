@@ -4,12 +4,14 @@ local json      = require "cjson"
 local util      = require "util"
 local ws_server = require "ws.server"
 local opcode    = require "def.opcode"
+local errcode   = require "def.errcode"
 
 local player    = ...
 local player    = require(player)
 
 local ws
-local protobuf -- 需要在节点启动时初始化 util.init_proto_env()
+local protobuf  -- 需要在节点启动时初始化 util.init_proto_env()
+local send_type -- text/binary
 local CMD = {}
 
 local handler = {}
@@ -46,16 +48,58 @@ function handler.binary(sock_buff)
 
     local data = protobuf.decode(opname, buff, sz)
     util.printdump(data)
+
+    if not util.try(function()
+        assert(player, "player nil")
+        assert(player[modulename], string.format("module nil [%s.%s]", modulename, simplename))
+        assert(player[modulename][simplename], string.format("handle nil [%s.%s]", modulename, simplename))
+        ret = player[modulename][simplename](player[modulename], data) or 0
+    end) then
+        ret = errcode.Traceback
+    end 
+
+    assert(ret, string.format("no respone, opname %s", opname))
+    if type(ret) == "table" then
+        ret.err = ret.err or 0
+    else
+        ret = {err = ret} 
+    end                                                                                                                                                                                                                              
+    player:send(op+1, ret)
 end
 
 function handler.close()
 
 end
 
-function CMD.start(watchdog, fd)
+local function send_text(id, msg) -- 兼容text
+    ws:send_text(json.encode({
+        id  = id,
+        msg = msg,
+    }))
+end
+
+local function send_binary(op, tbl)
+    local data = protobuf.encode(opcode.toname(op), tbl)
+    print("send", #data)
+    ws:send_binary(string.pack(">Hs2", op, data))
+end
+
+function player:send(...)
+    if send_type == "binary" then
+        send_binary(...)
+    elseif send_type == "text" then
+        send_text(...)
+    else
+        skynet.error("send_type error", send_type)
+    end
+end
+
+function CMD.start(watchdog, fd, type)
+    send_type = type or "binary"
+    assert(send_type == "binary" or send_type == "text")
+
     socket.start(fd)
     ws = ws_server.new(fd, handler)
-
     player:init(watchdog, ws)
 end
 

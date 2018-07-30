@@ -25,6 +25,20 @@ function util.get_protobuf()
     return require "protobuf"
 end
 
+function __TRACEBACK__(errmsg) 
+    local track_text = debug.traceback(tostring(errmsg), 2)
+    skynet.error("---------------------------------------- TRACKBACK ----------------------------------------")
+    skynet.error(track_text, "LUA ERROR")
+    skynet.error("---------------------------------------- TRACKBACK ----------------------------------------")
+    local exception_text = "LUA EXCEPTION\n" .. track_text;
+    return false
+end
+
+-- 尝试调一个function 这个function可以带可变参数, 如果被调用的函数有异常 返回false，
+-- 退出此方法继续执行其他代码并打印出异常信息
+function util.try(func, ...) 
+    return xpcall(func, __TRACEBACK__, ...)
+end    
 
 function util.to_version_num(version)
     local v1, v2, v3 = string.match(version, "(%d+)%.(%d+)%.(%d+)")
