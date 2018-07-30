@@ -1,7 +1,7 @@
--- 一个虚拟机只能有一个
 local skynet    = require "skynet"
 local socket    = require "skynet.socket"
-local packet    = require "packet"
+local coroutine = require "skynet.coroutine"
+local packet    = require "sock.packet"
 local packetc   = require "packet.core"
 local protobuf  = require "protobuf"
 local opcode    = require "def.opcode"
@@ -18,28 +18,53 @@ function M.new(...)
 end
 
 function M:ctor(host, port)
-    self.host = host
-    self.port = port
-    self.fd = nil
-    self.csn = 0 -- client session
-    self.ssn = 0 -- server session
-    self.crypt_type = 0
-    self.crypt_key = 0
+    self._host = host
+    self._port = port
+    self._fd = nil
+    self._csn = 0 -- client session
+    self._ssn = 0 -- server session
+    self._crypt_type = 0
+    self._crypt_key = 0
+
+    self._call_requests = {} -- op -> co
 end
 
 function M:start()
-    self.fd = socket.open(self.host, self.port)
-    assert(self.fd)
+    self._fd = socket.open(self._host, self._port)
+    assert(self._fd)
 
     skynet.fork(function()
         while true do
-            local buff = socket.read(self.fd)
-            self:recv_package(buff)
+            local buff = socket.read(self._fd)
+            self:_recv(buff)
         end
     end)
 end
 
-function M:recv_package(sock_buff)
+function M:test(func)
+    local co = coroutine.create(func)
+    self:_suspended(co)
+end
+
+function M:call(op, data)
+    self:send(op, data)
+    return coroutine.yield(op)
+end
+
+function M:send(op, tbl)
+    self._csn = self._csn + 1
+    
+    local data, len
+    protobuf.encode(opcode.toname(op), tbl, function(buffer, bufferlen)
+        data, len = packet.pack(op, self._csn, self._ssn, 
+            self._crypt_type, self._crypt_key, buffer, bufferlen)
+    end)
+
+    print(string.format("send %s, csn:%d", opcode.toname(op), self._csn))
+    socket.write(self._fd, data, len+2)
+end
+
+function M:_recv(sock_buff)
     local data      = packetc.new(sock_buff) 
     local total     = data:read_ushort()
     local op        = data:read_ushort()
@@ -50,41 +75,32 @@ function M:recv_package(sock_buff)
     local sz        = #sock_buff - 10 - 2
     local buff      = data:read_bytes(sz)
     --local op, csn, ssn, crypt_type, crypt_key, buff, sz = packet.unpack(sock_buff)
-    print(op, csn ,ssn, crypt_type, crypt_key, buff, sz)
-    self.ssn = ssn
+    self._ssn = ssn
 
     local opname = opcode.toname(op)
     local modulename = opcode.tomodule(op)
     local simplename = opcode.tosimplename(op)
-    if opcode.has_session(op) then
-        print(string.format("recv package, 0x%x %s, csn:%d", op, opname, csn))
+    local funcname = modulename .. "_" .. simplename
+    if self[funcname] then
+        self[funcname](self, data) 
     end
+    print(string.format("recv %s, csn:%d ssn:%d", opname, csn, ssn))
 
     local data = protobuf.decode(opname, buff, sz)
-    print(data)
-    util.printdump(data)
+
+    local co = self._call_requests[op - 1]
+    self._call_requests[op - 1] = nil
+    if co and coroutine.status(co) == "suspended" then
+        self:_suspended(co, op, data)
+    end
 end
 
-function M:send(op, tbl)
-    self.csn = self.csn + 1
-    
-    local data, len
-    protobuf.encode(opcode.toname(op), tbl, function(buffer, bufferlen)
-        data, len = packet.pack(op, self.csn, self.ssn, 
-            self.crypt_type, self.crypt_key, buffer, bufferlen)
-    end)
-
-    print("send", data, len)
-    socket.write(self.fd, data, len+2)
-    --socket.write(self.fd, string.pack(">s2", data) )
-end
-
-function M:call()
-
-end
-
-function M:test(func)
-    
+function M:_suspended(co, op, ...)
+    assert(op == nil or op >= 0)
+    local status, op = coroutine.resume(co, ...)
+    if coroutine.status(co) == "suspended" then                                                                                                                                                                                  
+        self._call_requests[op] = co
+    end
 end
 
 return M

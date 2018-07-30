@@ -1,6 +1,6 @@
 local skynet    = require "skynet"
 local socket    = require "skynet.socket"
-local packet    = require "packet"
+local packet    = require "sock.packet"
 local util      = require "util"
 local opcode    = require "def.opcode"
 
