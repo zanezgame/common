@@ -13,6 +13,9 @@ test(项目例子,https://github.com/zhandouxiaojiji/test.git)
     sample
 proj(你的项目)
     xxgame
+        lualib(项目lua库)
+        service(项目用到的服务)
+        script(项目的逻辑脚本)
     oogame
 ```
 # 配置
