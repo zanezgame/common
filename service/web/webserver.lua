@@ -4,22 +4,32 @@ local httpd         = require "http.httpd"
 local sockethelper  = require "http.sockethelper"
 local urllib        = require "http.url"
 local json          = require "cjson"
+local util          = require "util"
 
 local table = table
 local string = string
 
-local mode, module, port = ...
-local CMD = require(module)
+local mode, server_path, port, preload = ...
+local server = require(server_path) 
+local port = tonumber(port)
+local preload = preload and tonumber(preload) or 20
 
 if mode == "agent" then
--- web 以json的格式发到服务器，服务器同样以json格式返回，每条请求都建立socket，都有返回结果
--- cmd为login时，验证密码，如果通过，返回token
--- cmd为其它任何命令，先验证token再进行操作
-function on_message(cmd, data, body)
-    if CMD[cmd] then
-        return CMD[cmd](data, body)
+
+-- 如果是非字符串，server需要提供pack和unpack方法
+server.pack = server.pack or function (_, data)
+    return data
+end
+server.unpack = server.unpack or function (_, data)
+    return data
+end
+
+function on_message(cmd, data)
+    if server[cmd] then
+        local ret = server[cmd](server, server:unpack(data))
+        server:pack(ret or "")
     else
-        return "cmd not exist"
+        return "error"
     end
 end
 
@@ -42,7 +52,7 @@ skynet.start(function()
             else
                 local data 
                 local path, query = urllib.parse(url)
-                local cmd = string.match(path, "(%w+)$")        
+                local cmd = string.match(path, "([^/]+)$")        
                 if query then
                     data = urllib.parse_query(query)
                 end
@@ -64,8 +74,8 @@ elseif mode == "gate" then
 
 skynet.start(function()
     local agent = {}
-    for i= 1, 2 do
-        agent[i] = skynet.newservice(SERVICE_NAME, "agent", module, port)
+    for i= 1, preload do
+        agent[i] = skynet.newservice(SERVICE_NAME, "agent", server_path, port)
     end
     local balance = 1
     
