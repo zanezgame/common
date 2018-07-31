@@ -33,6 +33,7 @@ end
 local CMD = {}
 function CMD.start(conf)
     util.init_proto_env(conf.proto)
+    server:start()
 
     preload = conf.preload or 10     -- 预加载agent数量
     for i = 1, preload do
@@ -64,7 +65,7 @@ end
 
 skynet.start(function()
     skynet.dispatch("lua", function(_, _, cmd1, ...)
-        local f = CMD[cmd1]
+        local f = CMD[cmd1] or server[cmd1]
         assert(f, cmd1)
         util.ret(f(...))
     end)
