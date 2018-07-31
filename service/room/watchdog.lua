@@ -3,7 +3,7 @@ local util          = require "util"
 
 local manager, room = ...
 assert(manager) -- 房间管理逻辑(xxx.manager)
-assert(room)    -- 房间逻辑(xx.room)
+assert(room)    -- 房间逻辑(xxx.room)
 
 local manager = require(manager)
 
@@ -31,6 +31,17 @@ function CMD.start(conf, preload)
         table_insert(free_list, agent)
     end
     manager:start(skynet.self())
+end
+
+function CMD.init_agent(...)
+    local agent = pop_free_agent()
+    skynet.call(agent, "lua", "start", ...)
+    return agent
+end
+
+-- release 后暂时不考虑释放agent，下次重复利用
+function CMD.release_agent(agent)
+    table_insert(free_list, agent)
 end
 
 skynet.start(function()
