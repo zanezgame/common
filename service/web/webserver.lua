@@ -9,25 +9,25 @@ local util          = require "util"
 local table = table
 local string = string
 
-local mode, server_path, port, preload = ...
-local server = require(server_path) 
+local mode, server_path, player_path, port, preload, gate = ...
 local port = tonumber(port)
 local preload = preload and tonumber(preload) or 20
 
 if mode == "agent" then
+local player = require(player_path)
 
--- 如果是非字符串，server需要提供pack和unpack方法
-server.pack = server.pack or function (_, data)
+-- 如果是非字符串，player需要提供pack和unpack方法
+player.pack = player.pack or function (_, data)
     return data
 end
-server.unpack = server.unpack or function (_, data)
+player.unpack = player.unpack or function (_, data)
     return data
 end
 
 function on_message(cmd, data)
-    if server[cmd] then
-        local ret = server[cmd](server, server:unpack(data))
-        return server:pack(ret or "")
+    if player[cmd] then
+        local ret = player[cmd](player, player:unpack(data))
+        return player:pack(ret or "")
     else
         return "error"
     end
@@ -68,14 +68,20 @@ skynet.start(function()
         end
         socket.close(id)
     end)
+    player:init(gate)
 end)
 
 elseif mode == "gate" then
 
+local server 
+if server_path then
+    server = require(server_path) 
+end
+
 skynet.start(function()
     local agent = {}
     for i= 1, preload do
-        agent[i] = skynet.newservice(SERVICE_NAME, "agent", server_path, port)
+        agent[i] = skynet.newservice(SERVICE_NAME, "agent", server_path, player_path, port, preload, skynet.self())
     end
     local balance = 1
     
@@ -88,6 +94,19 @@ skynet.start(function()
             balance = 1
         end
     end)
+
+    skynet.dispatch("lua", function(_, _, cmd, subcmd, ...)
+        local f = assert(server[cmd], cmd)
+        if type(f) == "function" then
+            util.ret(f(server, subcmd, ...))
+        else
+            util.ret(f[subcmd](f, ...))
+        end
+    end)
+
+    if server then
+        server:start()
+    end
 end)
 
 else
