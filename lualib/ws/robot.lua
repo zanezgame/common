@@ -27,6 +27,7 @@ function M:start()
     assert(self._ws)
     self._ws:connect(self._url)
 
+    -- recv
     skynet.fork(function()
         while true do
             local data, type, err = self._ws:recv_frame()
@@ -35,9 +36,19 @@ function M:start()
             elseif type == "binary" then
                 self:_recv_binary(data)
             end
-            skynet.sleep(10)
+            --skynet.sleep(10)
         end
     end)
+    
+    -- ping
+    if self.ping then
+        skynet.fork(function()
+            while true do
+                self:ping()
+                skynet.sleep(100*10)
+            end
+        end)
+    end
 end
 
 function M:test(func)
@@ -51,6 +62,7 @@ function M:call(op, data)
 end
 
 function M:send(...)
+    skynet.sleep(10)
     if self._send_type == "text" then
         self:_send_text(...)
     elseif self._send_type == "binary" then
@@ -59,7 +71,7 @@ function M:send(...)
 end
 
 function M:_suspended(co, op, ...)
-    assert(op == nil or op >= 0 or type(op) == "string") -- 暂时兼容text
+    assert(op == nil or type(op) == "string" or op >= 0) -- 暂时兼容text
     local status, op = coroutine.resume(co, ...)
     if coroutine.status(co) == "suspended" then                                                                                                                                                                                  
         self._call_requests[op] = co
@@ -68,16 +80,18 @@ end
 
 function M:_recv_text(text)
     local data = json.decode(text)
-    util.printdump(data)
+    --util.printdump(data)
     local recv_id = data.id
+    if recv_id == "HearBeatPing" then return end
     local req_id = "C2s"..string.match(recv_id, "S2c(.+)")
     if self[recv_id] then
         self[recv_id](self, data.msg)     
     end
     
     local co = self._call_requests[req_id]
+    self._call_requests[req_id] = nil
     if co and coroutine.status(co) == "suspended" then
-        self:_suspended(co, recv_id, data.msg)
+        self:_suspended(co, recv_id,  data.msg)
     end
     return
 end
