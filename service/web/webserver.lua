@@ -27,7 +27,7 @@ end
 function on_message(cmd, data)
     if server[cmd] then
         local ret = server[cmd](server, server:unpack(data))
-        server:pack(ret or "")
+        return server:pack(ret or "")
     else
         return "error"
     end

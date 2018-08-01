@@ -1,11 +1,13 @@
 local skynet    = require "skynet"
 local socket    = require "skynet.socket"
 local coroutine = require "skynet.coroutine"
+local http      = require "web.http_helper"
 local packet    = require "sock.packet"
 local packetc   = require "packet.core"
 local protobuf  = require "protobuf"
 local opcode    = require "def.opcode"
 local util      = require "util"
+local json      = require "cjson"
 
 local fd
 
@@ -17,9 +19,10 @@ function M.new(...)
     return setmetatable(t, mt)
 end
 
-function M:ctor(host, port)
-    self._host = host
-    self._port = port
+function M:ctor(proj_name)
+    self._proj_name = proj_name
+    self._host = nil
+    self._port = nil
     self._fd = nil
     self._csn = 0 -- client session
     self._ssn = 0 -- server session
@@ -29,7 +32,20 @@ function M:ctor(host, port)
     self._call_requests = {} -- op -> co
 end
 
+function M:login()
+    local ret, resp = http.get("http://huangjx.top/login/req_login", {
+        proj_name = self._proj_name 
+    })
+    if ret == "error" then
+        return
+    end
+    print(ret, resp)
+    local data = json.decode(resp)
+    util.printdump(data)
+end
+
 function M:start()
+    self:login()
     self._fd = socket.open(self._host, self._port)
     assert(self._fd)
 
