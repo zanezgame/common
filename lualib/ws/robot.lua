@@ -32,6 +32,13 @@ function M:start()
     skynet.fork(function()
         while true do
             local data, type, err = self._ws:recv_frame()
+            if err then
+                if self.offline then
+                    self:offline()
+                end
+                print("socket error", err)
+                return
+            end
             if type == "text" then
                 self:_recv_text(data) 
             elseif type == "binary" then
