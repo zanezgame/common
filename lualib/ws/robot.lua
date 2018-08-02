@@ -21,6 +21,7 @@ function M:_ctor(url, send_type)
     self._send_type = send_type or "text"
     self._ws = ws_client:new()
     self._call_requests = {} -- op -> co
+    self._waiting = {} -- co -> time
 end
 
 function M:start()
@@ -45,14 +46,32 @@ function M:start()
         skynet.fork(function()
             while true do
                 self:ping()
-                skynet.sleep(100*10)
+                skynet.sleep(100*30)
             end
         end)
     end
+
+    -- tick
+    self.tick = 0
+    skynet.fork(function()
+        while true do
+            self.tick = self.tick + 1
+            skynet.sleep(1)
+            for co, time in pairs(self._waiting) do
+                if time <= 0 then
+                    self:_suspended(co)
+                else
+                    self._waiting[co] = time - 1
+                end
+            end
+        end
+    end)
 end
 
 function M:test(func)
-    local co = coroutine.create(func)
+    local co = coroutine.create(function()
+        util.try(func)  
+    end)
     self:_suspended(co)
 end
 
@@ -61,8 +80,11 @@ function M:call(op, data)
     return coroutine.yield(op)
 end
 
+function M:wait(time)
+    return coroutine.yield(nil, time)
+end
+
 function M:send(...)
-    skynet.sleep(10)
     if self._send_type == "text" then
         self:_send_text(...)
     elseif self._send_type == "binary" then
@@ -72,9 +94,14 @@ end
 
 function M:_suspended(co, op, ...)
     assert(op == nil or type(op) == "string" or op >= 0) -- 暂时兼容text
-    local status, op = coroutine.resume(co, ...)
+    local status, op, wait = coroutine.resume(co, ...)
     if coroutine.status(co) == "suspended" then                                                                                                                                                                                  
-        self._call_requests[op] = co
+        if op then
+            self._call_requests[op] = co
+        end
+        if wait then
+            self._waiting[co] = wait
+        end
     end
 end
 
@@ -82,6 +109,7 @@ function M:_recv_text(text)
     local data = json.decode(text)
     --util.printdump(data)
     local recv_id = data.id
+    --print("recv", recv_id)
     if recv_id == "HearBeatPing" then return end
     local req_id = "C2s"..string.match(recv_id, "S2c(.+)")
     if self[recv_id] then
