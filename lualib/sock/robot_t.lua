@@ -24,6 +24,7 @@ function M:ctor(proj_name)
     self._crypt_key = 0
 
     self._call_requests = {} -- op -> co
+    self._waiting = {} -- co -> time
 end
 
 function M:login()
@@ -49,6 +50,32 @@ function M:start()
             self:_recv(buff)
         end
     end)
+ 
+    -- ping
+    if self.ping then
+        skynet.fork(function()
+            while true do
+                self:ping()
+                skynet.sleep(100*30)
+            end
+        end)
+    end
+
+    -- tick
+    self.tick = 0
+    skynet.fork(function()
+        while true do
+            self.tick = self.tick + 1
+            skynet.sleep(1)
+            for co, time in pairs(self._waiting) do
+                if time <= 0 then
+                    self:_suspended(co)
+                else
+                    self._waiting[co] = time - 1
+                end
+            end
+        end
+    end)
 end
 
 function M:test(func)
@@ -59,6 +86,10 @@ end
 function M:call(op, data)
     self:send(op, data)
     return coroutine.yield(op)
+end
+
+function M:wait(time)
+    return coroutine.yield(nil, time)
 end
 
 function M:send(op, tbl)
@@ -107,9 +138,14 @@ end
 
 function M:_suspended(co, op, ...)
     assert(op == nil or op >= 0)
-    local status, op = coroutine.resume(co, ...)
+    local status, op, wait = coroutine.resume(co, ...)
     if coroutine.status(co) == "suspended" then                                                                                                                                                                                  
-        self._call_requests[op] = co
+        if op then
+            self._call_requests[op] = co
+        end
+        if wait then
+            self._waiting[co] = wait
+        end
     end
 end
 

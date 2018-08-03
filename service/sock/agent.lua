@@ -3,6 +3,7 @@ local socket    = require "skynet.socket"
 local packet    = require "sock.packet"
 local util      = require "util"
 local opcode    = require "def.opcode"
+local protobuf  = require "protobuf"
 
 local player_path, MAX_COUNT = ...
 local player_t = require(player_path)
@@ -53,15 +54,16 @@ function CMD.free_player(uid)
 end
 
 function CMD.socket_close(fd)
-    local player = assert(d2player[fd])
+    local player = assert(fd2player[fd])
     player:offline()
     fd2player[fd] = nil
 end
 
-function CMD.init(gate, watchdog, max_count)
+function CMD.init(gate, watchdog, max_count, proto)
     GATE = assert(gate)
     WATCHDOG = assert(watchdog)
     MAX_COUNT = max_count or 100
+    protobuf.register_file(proto)
 end
 
 skynet.start(function()

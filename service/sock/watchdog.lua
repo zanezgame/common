@@ -14,6 +14,7 @@ local free_agents = {}  -- 空闲的agent addr -> true
 local full_agents = {}  -- 满员的agent addr -> true
 
 local PLAYER_PER_AGENT  -- 每个agent支持player最大值
+local PROTO
 
 local table_insert = table.insert
 local table_remove = table.remove
@@ -26,7 +27,7 @@ local function get_free_agent()
     end
     if not agent then
         agent = skynet.newservice("sock/agent", player_path)
-        skynet.call(agent, "lua", "init", GATE, WATCHDOG, PLAYER_PER_AGENT)
+        skynet.call(agent, "lua", "init", GATE, WATCHDOG, PLAYER_PER_AGENT, PROTO)
         free_agents[agent] = true
     end
     return agent
@@ -73,12 +74,13 @@ function CMD.start(conf)
     util.init_proto_env(conf.proto)
     
     PLAYER_PER_AGENT = conf.player_per_agent or 100
+    PROTO = conf.proto
     server:start()
     conf.preload = conf.preload or 10     -- 预加载agent数量
 	skynet.call(gate, "lua", "open" , conf)
     for i = 1, conf.preload do
         local agent = skynet.newservice("sock/agent", player_path)
-        skynet.call(agent, "lua", "init", GATE, WATCHDOG, PLAYER_PER_AGENT)
+        skynet.call(agent, "lua", "init", GATE, WATCHDOG, PLAYER_PER_AGENT, PROTO)
         self.free_agents[agent] = true
     end
 end

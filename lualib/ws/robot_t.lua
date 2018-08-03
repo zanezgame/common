@@ -6,17 +6,11 @@ local opcode    = require "def.opcode"
 local errcode   = require "def.errcode"
 local util      = require "util"
 local json      = require "cjson"
+local class     = require "class"
 local ws_client = require "ws.client"
 
-local M = {}
-local mt = {__index = M}
-function M.new(...)
-    local t = {}
-    M._ctor(t, ...)
-    return setmetatable(t, mt)
-end
-
-function M:_ctor(url, send_type)
+local M = class("robot_t")
+function M:ctor(url, send_type)
     self._url = url
     self._send_type = send_type or "text"
     self._ws = ws_client:new()
