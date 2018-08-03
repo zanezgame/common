@@ -8,17 +8,11 @@ local protobuf  = require "protobuf"
 local opcode    = require "def.opcode"
 local util      = require "util"
 local json      = require "cjson"
+local class     = require "class"
 
 local fd
 
-local M = {}
-local mt = {__index = M}
-function M.new(...)
-    local t = {}
-    M.ctor(t, ...)
-    return setmetatable(t, mt)
-end
-
+local M = class("robot_t")
 function M:ctor(proj_name)
     self._proj_name = proj_name
     self._host = nil

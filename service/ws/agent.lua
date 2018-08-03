@@ -1,13 +1,14 @@
-local skynet    = require "skynet"
-local socket    = require "skynet.socket"
-local json      = require "cjson"
-local util      = require "util"
-local ws_server = require "ws.server"
-local opcode    = require "def.opcode"
-local errcode   = require "def.errcode"
+local skynet        = require "skynet"
+local socket        = require "skynet.socket"
+local json          = require "cjson"
+local util          = require "util"
+local ws_server     = require "ws.server"
+local opcode        = require "def.opcode"
+local errcode       = require "def.errcode"
 
-local player    = ...
-local player    = require(player)
+local player_path   = ...
+local player_t      = require(player_path)
+local player        = player_t.new()
 
 local ws
 local protobuf  -- 需要在节点启动时初始化 util.init_proto_env()
@@ -119,5 +120,6 @@ skynet.start(function()
         end
     end)
     protobuf = util.get_protobuf()
+    
 end)
 

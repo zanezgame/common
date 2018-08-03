@@ -4,30 +4,17 @@ local packet    = require "sock.packet"
 local util      = require "util"
 local opcode    = require "def.opcode"
 
-local player    = ...
-player          = require(player)
+local player_path, MAX_COUNT = ...
+local player_t = require(player_path)
 
-local FD
 local WATCHDOG
 local GATE
-local protobuf -- 需要在节点启动时初始化 util.init_proto_env()
-local _csn = 0
-local _ssn = 0
-local _crypt_type = 0
-local _crypt_key = 0
+local MAX_COUNT
 
 local CMD = {}
-
-local function send_package(op, tbl) 
-    _ssn = _ssn + 1
-    local data, len
-    protobuf.encode(opcode.toname(op), tbl, function(buffer, bufferlen)
-        data, len = packet.pack(op, _csn, _ssn, 
-            _crypt_type, _crypt_key, buffer, bufferlen)
-    end)
-	socket.write(FD, data, len + 2)
-
-end
+local fd2player = {}
+local uid2player = {}
+local count = 0
 
 skynet.register_protocol {
 	name = "client",
@@ -35,38 +22,46 @@ skynet.register_protocol {
 	unpack = function (buff, sz)
 		return packet.unpack(buff, sz)
 	end,
-	dispatch = function (fd, _, op, csn, ssn, crypt_type, crypt_key, buff, sz)
-		assert(fd == FD)	-- You can use fd to reply message
+	dispatch = function (fd, _, ...)
 		skynet.ignoreret()	-- session is fd, don't call skynet.ret
-        
-        _csn = csn
 
-        local opname = opcode.toname(op)
-        local modulename = opcode.tomodule(op)
-        local simplename = opcode.tosimplename(op)
-        if opcode.has_session(op) then
-            skynet.error("recv package, 0x%x %s, csn:%d", op, opname, csn)
-        end
-
-        local data = protobuf.decode(opname, buff, sz)
-        assert(type(data) == "table", data)
-        util.printdump(data)
-
-        send_package(op+1, {err = 88})
+        local player = assert(fd2player[fd], "player not exist, fd:"..fd)
+        player.net:recv(...)
 	end
 }
 
-function CMD.start(conf)
-	FD = conf.fd
-	GATE = conf.gate
-    WATCHDOG = conf.WATCHDOG
-
-	skynet.call(GATE, "lua", "forward", FD)
+function CMD.new_player(fd)
+    local player = player_t.new()
+    player.net:init(GATE, fd)
+    fd2player[fd] = player
+	skynet.call(GATE, "lua", "forward", fd)
+    count = count + 1
+    return count >= MAX_COUNT
 end
 
-function CMD.disconnect()
-	-- todo: do something before exit
-	skynet.exit()
+function CMD.online(uid, fd)
+    local player = assert(fd2player[fd])
+    uid2player[uid] = player
+end
+
+function CMD.free_player(uid)
+    uid2player[uid] = nil
+    if count == MAX_COUNT then
+        skynet.call(WATCHDOG, "lua", "set_free", skynet.self())
+    end
+    count = count - 1
+end
+
+function CMD.socket_close(fd)
+    local player = assert(d2player[fd])
+    player:offline()
+    fd2player[fd] = nil
+end
+
+function CMD.init(gate, watchdog, max_count)
+    GATE = assert(gate)
+    WATCHDOG = assert(watchdog)
+    MAX_COUNT = max_count or 100
 end
 
 skynet.start(function()
@@ -74,5 +69,4 @@ skynet.start(function()
 		local f = assert(CMD[command])
 		util.ret(f(...))
 	end)
-    protobuf = util.get_protobuf()
 end)
