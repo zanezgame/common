@@ -43,5 +43,7 @@ function M:recv(op, csn, ssn, crypt_type, crypt_key, buff, sz)
     assert(type(data) == "table", data)
     util.printdump(data)
 
-    send_package(op+1, {err = 88})
+    self:send(op+1, {err = 88})
 end
+
+return M

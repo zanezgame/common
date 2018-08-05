@@ -28,15 +28,17 @@ function M:ctor(proj_name)
 end
 
 function M:login()
+    --local ret, resp = http.get("http://www.kaizhan8.com:8888/login/req_login", {
     local ret, resp = http.get("http://huangjx.top/login/req_login", {
         proj_name = self._proj_name 
     })
-    if ret == "error" then
+    if resp == "error" then
         return
     end
     print(ret, resp)
     local data = json.decode(resp)
-    util.printdump(data)
+    self._host = data.host
+    self._port = data.port
 end
 
 function M:start()

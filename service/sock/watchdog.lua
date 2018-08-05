@@ -7,7 +7,7 @@ assert(player_path) -- 玩家逻辑(xxx.xxxplayer_t)
 
 local server = require(server_path)
 
-local gate
+local GATE
 local fd2agent = {}     -- fd对应的agent
 local uid2agent = {}    -- 每个账号对应的agent
 local free_agents = {}  -- 空闲的agent addr -> true
@@ -40,13 +40,13 @@ function SOCKET.open(fd, addr)
 	fd2agent[fd] = agent
 	local is_full = skynet.call(agent, "lua", "new_player", fd)
     if is_full then
-        self.free_agents[agent] = nil
-        self.full_agents[agent] = true
+        free_agents[agent] = nil
+        full_agents[agent] = true
     end
 end
 
 local function close_socket(fd)
- 	skynet.call(gate, "lua", "kick", fd)
+    skynet.call(GATE, "lua", "kick", fd)
     fd2agent[fd] = nil   
 end
 
@@ -77,16 +77,16 @@ function CMD.start(conf)
     PROTO = conf.proto
     server:start()
     conf.preload = conf.preload or 10     -- 预加载agent数量
-	skynet.call(gate, "lua", "open" , conf)
+    skynet.call(GATE, "lua", "open" , conf)
     for i = 1, conf.preload do
         local agent = skynet.newservice("sock/agent", player_path)
-        skynet.call(agent, "lua", "init", GATE, WATCHDOG, PLAYER_PER_AGENT, PROTO)
-        self.free_agents[agent] = true
+        skynet.call(agent, "lua", "init", GATE, skynet.self(), PLAYER_PER_AGENT, PROTO)
+        free_agents[agent] = true
     end
 end
 function CMD.set_free(agent)
-    self.free_agents[agent] = true
-    self.full_agents[agent] = nil
+    free_agents[agent] = true
+    full_agents[agent] = nil
 end
 
 -- 上线后agent绑定uid，下线缓存一段时间
@@ -97,8 +97,8 @@ end
 -- 下线一段时间后调用
 function CMD.player_destroy(agent, uid)
     uid2agent[uid] = nil
-    self.free_agents[agent] = true
-    self.full_agents[agent] = false
+    free_agents[agent] = true
+    full_agents[agent] = false
 end
 
 skynet.start(function()
@@ -119,6 +119,6 @@ skynet.start(function()
         end
     end)
 
-	gate = skynet.newservice("gate")
+   GATE = skynet.newservice("gate")
     
 end)
