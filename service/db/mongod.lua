@@ -12,7 +12,7 @@ local db
 local CMD = {}
 function CMD.find_one(name, query, selector)
     local data = db[name]:findOne(query, selector)
-    return util.key_string_to_number(data)
+    return util.str2num(data)
 end
 
 function CMD.find_one_with_default(collect, query, default, selector)
@@ -21,7 +21,7 @@ function CMD.find_one_with_default(collect, query, default, selector)
         M.insert(name, default)
         return default
     end
-    return util.key_string_to_number(data)
+    return util.str2num(data)
 end
 
 function CMD.find(name, query, selector)
@@ -30,16 +30,16 @@ function CMD.find(name, query, selector)
     while ret:hasNext() do
         table.insert(data, ret:next())
     end
-    return util.key_string_to_number(data)
+    return util.str2num(data)
 end
 
 function CMD.update(name, query_tbl, update_tbl)
-    update_tbl = util.key_number_to_string(update_tbl)
+    update_tbl = util.num2str(update_tbl)
     return db[name]:findAndModify({query = query_tbl, update = update_tbl})
 end
 
 function CMD.insert(name, tbl)
-    tbl = util.key_number_to_string(tbl)
+    tbl = util.num2str(tbl)
     return db[name]:safe_insert(tbl)
 end
 

@@ -2,64 +2,79 @@ local skynet        = require "skynet"
 local socket        = require "skynet.socket"
 local httpd         = require "http.httpd"
 local urllib        = require "http.url"
-local sockethelper  = require "http.sockethelper"
 local json          = require "cjson"
 local util          = require "util"
 
-local server, player = ...
-assert(server) -- 服务器逻辑(xxx.xxxserver)
-assert(player) -- 玩家逻辑(xxx.xxxplayer)
+local server_path, player_path = ...
+assert(server_path) -- 服务器逻辑(xxx.xxxserver)
+assert(player_path) -- 玩家逻辑(xxx.xxxplayer)
 
-local server = require(server)
+local server = require(server_path)
 
-local socks = {}     -- id:ws
-local fd2agent = {}  -- socket对应的agent
-local acc2agent = {} -- 每个账号对应的agent
-local free_list = {} -- 空闲的agent list
-local send_type
+local socks = {}        -- id:ws
+local uid2agent = {}    -- 每个账号对应的agent
+local free_agents = {}  -- 空闲的agent addr -> true
+local full_agents = {}  -- 满员的agent addr -> true
+
+local PLAYER_PER_AGENT  -- 每个agent支持player最大值
+local PROTO
+
 
 local table_insert = table.insert
 local table_remove = table.remove
 
-local function pop_free_agent()
-    local agent = free_list[#free_list]
-    if not agent then
-        return skynet.newservice("ws/agent", player)
+local function create_agent()
+    local agent
+    for a, _ in pairs(free_agents) do
+        agent = a
+        break
     end
-    free_list[#free_list] = nil
+    if not agent then
+        agent = skynet.newservice("ws/agent", player_path)
+        skynet.call(agent, "lua", "init", skynet.self(), PLAYER_PER_AGENT, PROTO)
+        free_agents[agent] = true
+    end
     return agent
 end
 
 local CMD = {}
 function CMD.start(conf)
-    util.init_proto_env(conf.proto)
+    PLAYER_PER_AGENT = conf.player_per_agent or 100
+    PROTO = conf.proto
+
     server:start()
 
     preload = conf.preload or 10     -- 预加载agent数量
     for i = 1, preload do
-        local agent = skynet.newservice("ws/agent", player)
-        table_insert(free_list, agent)
+        create_agent()
     end
 
     local address = "0.0.0.0:"..conf.port
     skynet.error("Listening "..address)
     local fd = assert(socket.listen(address))
     socket.start(fd , function(fd, addr)
-       local agent = pop_free_agent()
-       skynet.call(agent, "lua", "start", skynet.self(), fd, send_type)
-       fd2agent[fd] = agent
+        local agent
+        for a, _ in pairs(free_agents) do
+            agent = a
+            break
+        end
+        if not agent then
+            agent = create_agent()
+        end
+        skynet.call(agent, "lua", "new_player", skynet.self(), fd, send_type)
     end)
 end
 
--- 上线后agent绑定acc，下线缓存一段时间
-function CMD.bind_acc(agent, acc)
-    acc2agent[acc] = agent
+-- 上线后agent绑定uid，下线缓存一段时间
+function CMD.player_online(agent, uid)
+    uid2agent[uid] = agent
 end
 
 -- 下线一段时间后调用
-function CMD.free_agent(acc, agent)
-    table_insert(free_list, agent) 
-    acc2agent[acc] = nil
+function CMD.player_destroy(agent, uid)
+    uid2agent[uid] = nil
+    free_agents[agent] = true
+    full_agents[agent] = false
 end
 
 

@@ -159,23 +159,23 @@ function util.is_in_list(list, obj)
 end
 
 -- 把table中类型为string的数字key转换成number
-function util.key_string_to_number(tbl)
+function util.str2num(tbl)
     if type(tbl) ~= "table" then return tbl end
     local data = {}
     for k,v in pairs(tbl) do
         k = tonumber(k) or k
-        v = type(v) == "table" and util.key_string_to_number(v) or v
+        v = type(v) == "table" and util.str2num(v) or v
         data[k] = v
     end
     return data 
 end
 
-function util.key_number_to_string(tbl)
+function util.num2str(tbl)
     if type(tbl) ~= "table" then return tbl end
     local data = {}
     for k,v in pairs(tbl) do
         k = tostring(k)
-        v = type(v) == "table" and util.key_number_to_string(v) or v
+        v = type(v) == "table" and util.num2str(v) or v
         data[k] = v
     end
     return data 

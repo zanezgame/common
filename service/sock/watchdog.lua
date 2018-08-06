@@ -19,24 +19,24 @@ local PROTO
 local table_insert = table.insert
 local table_remove = table.remove
 
-local function get_free_agent()
-    local agent
-    for a, _ in pairs(free_agents) do
-        agent = a
-        break
-    end
-    if not agent then
-        agent = skynet.newservice("sock/agent", player_path)
-        skynet.call(agent, "lua", "init", GATE, WATCHDOG, PLAYER_PER_AGENT, PROTO)
-        free_agents[agent] = true
-    end
+local function create_agent()
+    local agent = skynet.newservice("sock/agent", player_path)
+    skynet.call(agent, "lua", "init", GATE, skynet.self(), PLAYER_PER_AGENT, PROTO)
+    free_agents[agent] = true
     return agent
 end
 
 local SOCKET = {}
 function SOCKET.open(fd, addr)
 	skynet.error("New client from : " .. addr, fd)
-    local agent = get_free_agent()
+    local agent
+    for a, _ in pairs(free_agents) do
+        agent = a
+        break
+    end
+    if not agent then
+        agent = create_agent()
+    end
 	fd2agent[fd] = agent
 	local is_full = skynet.call(agent, "lua", "new_player", fd)
     if is_full then
@@ -71,8 +71,6 @@ end
 
 local CMD = {}
 function CMD.start(conf)
-    util.init_proto_env(conf.proto)
-    
     PLAYER_PER_AGENT = conf.player_per_agent or 100
     PROTO = conf.proto
     server:start()

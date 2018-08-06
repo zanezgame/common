@@ -31,6 +31,13 @@ skynet.register_protocol {
 	end
 }
 
+function CMD.init(gate, watchdog, max_count, proto)
+    GATE = assert(gate)
+    WATCHDOG = assert(watchdog)
+    MAX_COUNT = max_count or 100
+    protobuf.register_file(proto)
+end
+
 function CMD.new_player(fd)
     local player = player_t.new()
     player.net:init(GATE, fd)
@@ -57,13 +64,6 @@ function CMD.socket_close(fd)
     local player = assert(fd2player[fd])
     player:offline()
     fd2player[fd] = nil
-end
-
-function CMD.init(gate, watchdog, max_count, proto)
-    GATE = assert(gate)
-    WATCHDOG = assert(watchdog)
-    MAX_COUNT = max_count or 100
-    protobuf.register_file(proto)
 end
 
 skynet.start(function()
