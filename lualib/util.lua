@@ -12,7 +12,8 @@ end
 
 -- 有需要的节点在启动时调用
 function util.init_proto_env(path)
-    skynet.newservice("proto_env", path)  
+    local sname = require "sname"
+    skynet.call(sname.PROTO, "lua", "register_file", path)
 end
 
 -- 获取节点内的protobuf
