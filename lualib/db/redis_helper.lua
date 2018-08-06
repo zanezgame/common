@@ -1,5 +1,5 @@
-local skynet = require "skynet"
-local sname = require "sname"
+local skynet    = require "skynet"
+local sname     = require "sname"
 
 local M = {}
 setmetatable(M, {
