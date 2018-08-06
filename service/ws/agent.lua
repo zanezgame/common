@@ -1,4 +1,5 @@
 local skynet        = require "skynet"
+local socket        = require "skynet.socket"
 local json          = require "cjson"
 local util          = require "util"
 local opcode        = require "def.opcode"

@@ -1,27 +1,20 @@
 local skynet    = require "skynet"
 local util      = require "util"
 
-local room = ...
-local room = require(room)
+local room_path = ...
+local room_t = require(room_path)
 
-local CMD = {}
-function CMD.start(watchdog)
-    room:init(watchdog)
+local rooms = {}
+local function create_room(room_id)
+   local room = room_t.new(room_id)
+   rooms[room_id] = room
+   return room
 end
 
 skynet.start(function()
-    skynet.dispatch("lua", function(_, _, cmd1, cmd2, ...)
-        local f = CMD[cmd1]
-        if f then
-            util.ret(f(cmd2, ...))
-        elseif room[cmd1] then
-            local module = player[cmd1]
-            if type(module) == "function" then
-                util.ret(module(player, cmd2, ...))
-            else
-                util.ret(module[cmd2](module, ...))
-            end
-        end
+    skynet.dispatch("lua", function(_, _, room_id, cmd, ...)
+        local room = rooms[room_id] or create_room(room_id)
+        util.ret(room[cmd](room, ...))
     end)
 end)
 

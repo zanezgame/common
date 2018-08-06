@@ -1,58 +1,30 @@
-local skynet        = require "skynet"
-local util          = require "util"
+local skynet = require "skynet"
+local util = require "util"
+local db = require "db.redis_helper"
 
-local manager, room = ...
-assert(manager) -- 房间管理逻辑(xxx.manager)
-assert(room)    -- 房间逻辑(xxx.room)
-
-local manager = require(manager)
-
-local NORET = "NORET"
-local id2agent = {}  -- room id对应的agent
-local free_list = {} -- 空闲的agent list
-
-local table_insert = table.insert
-local table_remove = table.remove
-
-local function pop_free_agent()
-    local agent = free_list[#free_list]
-    if agent == 0 then
-        return skynet.newservice("room/agent", room)
-    end
-    free_list[#free_list] = nil
-    return agent
-end
+local room_path, preload = ...
+local agents = {}
+local balance = 1
 
 local CMD = {}
-function CMD.start(conf, preload)
-    preload = preload or 10     -- 预加载agent数量
-    for i = 1, preload do
-        local agent = skynet.newservice("room/agent", room)
-        table_insert(free_list, agent)
+function CMD.create_room()
+    balance = balance + 1
+    if balance > #agent then
+        balance = 1
     end
-    manager:start(skynet.self())
-end
-
-function CMD.init_agent(...)
-    local agent = pop_free_agent()
-    skynet.call(agent, "lua", "start", ...)
-    return agent
-end
-
--- release 后暂时不考虑释放agent，下次重复利用
-function CMD.release_agent(agent)
-    table_insert(free_list, agent)
+    local agent = agents[balance]
+    local room_id = db.auto_id()
+    return room_id, agent
 end
 
 skynet.start(function()
-    skynet.dispatch("lua", function(_, _, cmd1, ...)
-        local ret = NORET
-        local f = CMD[cmd1]
-        if f then
-            util.ret(f(...))
-        else
-            f = assert(manager[cmd1])
-            util.ret(f(manager, ...))
-        end
+    preload = preload or 10
+    for i = 1, preload do
+        agents[i] = skynet.newservice("room/agent", room_path)
+    end
+    skynet.dispatch("lua", function(_,source, ...)
+        local ret = skynet.call(agent[balance], "lua", ...)
+        util.ret(ret)
     end)
 end)
+

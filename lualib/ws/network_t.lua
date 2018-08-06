@@ -6,6 +6,7 @@ local util      = require "util"
 local opcode    = require "def.opcode"
 local errcode   = require "def.errcode"
 local protobuf  = require "protobuf"
+local json      = require "cjson"
 
 local M = class("network_t")
 function M:ctor(player)
@@ -63,9 +64,9 @@ function M:_recv_text(t)
         return message
     end
     local resp_id = "S2c"..string.match(recv_id, "C2s(.+)")
-    assert(player[recv_id], "net handler nil")
-    if player[recv_id] then
-        local msg = player[recv_id](player, data.msg) or {}
+    assert(self.player[recv_id], "net handler nil")
+    if self.player[recv_id] then
+        local msg = self.player[recv_id](self.player, data.msg) or {}
         self._ws:send_text(json.encode({
             id = resp_id,
             msg = msg,

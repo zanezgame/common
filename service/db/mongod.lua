@@ -15,10 +15,10 @@ function CMD.find_one(name, query, selector)
     return util.str2num(data)
 end
 
-function CMD.find_one_with_default(collect, query, default, selector)
+function CMD.find_one_with_default(name, query, default, selector)
     local data = db[name]:findOne(query, selector)
     if not data then
-        M.insert(name, default)
+        CMD.insert(name, default)
         return default
     end
     return util.str2num(data)

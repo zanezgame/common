@@ -61,7 +61,7 @@ function CMD.start(conf)
         if not agent then
             agent = create_agent()
         end
-        skynet.call(agent, "lua", "new_player", skynet.self(), fd, send_type)
+        skynet.call(agent, "lua", "new_player", fd)
     end)
 end
 
