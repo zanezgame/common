@@ -9,7 +9,7 @@ local balance = 1
 local CMD = {}
 function CMD.create_room()
     balance = balance + 1
-    if balance > #agent then
+    if balance > #agents then
         balance = 1
     end
     local agent = agents[balance]
@@ -22,9 +22,9 @@ skynet.start(function()
     for i = 1, preload do
         agents[i] = skynet.newservice("room/agent", room_path)
     end
-    skynet.dispatch("lua", function(_,source, ...)
-        local ret = skynet.call(agent[balance], "lua", ...)
-        util.ret(ret)
+    skynet.dispatch("lua", function(_,_, cmd, ...)
+        local f = assert(CMD[cmd], cmd)
+        util.ret(f(...))
     end)
 end)
 

@@ -24,16 +24,9 @@ local table_insert = table.insert
 local table_remove = table.remove
 
 local function create_agent()
-    local agent
-    for a, _ in pairs(free_agents) do
-        agent = a
-        break
-    end
-    if not agent then
-        agent = skynet.newservice("ws/agent", player_path)
-        skynet.call(agent, "lua", "init", skynet.self(), PLAYER_PER_AGENT, PROTO)
-        free_agents[agent] = true
-    end
+    local agent = skynet.newservice("ws/agent", player_path)
+    skynet.call(agent, "lua", "init", skynet.self(), PLAYER_PER_AGENT, PROTO)
+    free_agents[agent] = true
     return agent
 end
 
