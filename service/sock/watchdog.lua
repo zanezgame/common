@@ -8,8 +8,7 @@ assert(player_path) -- 玩家逻辑(xxx.xxxplayer_t)
 local server = require(server_path)
 
 local GATE
-local fd2agent = {}     -- fd对应的agent
-local uid2agent = {}    -- 每个账号对应的agent
+local uid2agent = {}    -- 每个玩家对应的agent
 local free_agents = {}  -- 空闲的agent addr -> true
 local full_agents = {}  -- 满员的agent addr -> true
 
@@ -37,7 +36,6 @@ function SOCKET.open(fd, addr)
     if not agent then
         agent = create_agent()
     end
-	fd2agent[fd] = agent
 	local is_full = skynet.call(agent, "lua", "new_player", fd)
     if is_full then
         free_agents[agent] = nil
@@ -47,7 +45,6 @@ end
 
 local function close_socket(fd)
     skynet.call(GATE, "lua", "kick", fd)
-    fd2agent[fd] = nil   
 end
 
 function SOCKET.close(fd)
@@ -97,6 +94,13 @@ function CMD.player_destroy(agent, uid)
     uid2agent[uid] = nil
     free_agents[agent] = true
     full_agents[agent] = false
+end
+
+function CMD.reconnect(fd, uid, token)
+    local agent = uid2agent[uid] 
+    if agent and skynet.call(agent, "lua", "reconnect", fd, uid, token) then
+        return agent
+    end
 end
 
 skynet.start(function()

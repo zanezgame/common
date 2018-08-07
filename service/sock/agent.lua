@@ -25,7 +25,6 @@ skynet.register_protocol {
 	end,
 	dispatch = function (fd, _, ...)
 		skynet.ignoreret()	-- session is fd, don't call skynet.ret
-
         local player = assert(fd2player[fd], "player not exist, fd:"..fd)
         player.net:recv(...)
 	end
@@ -40,7 +39,7 @@ end
 
 function CMD.new_player(fd)
     local player = player_t.new()
-    player.net:init(GATE, fd)
+    player.net:init(WATCHDOG, GATE, skynet.self(), fd)
     fd2player[fd] = player
 	skynet.call(GATE, "lua", "forward", fd)
     count = count + 1
@@ -64,6 +63,19 @@ function CMD.socket_close(fd)
     local player = assert(fd2player[fd])
     player:offline()
     fd2player[fd] = nil
+end
+
+function CMD.reconnect(fd, uid, token)
+    local player = uid2player[uid]
+    if not player then
+        return
+    end
+    local old_fd = player.net:get_fd()
+    if player.net:reconnect(fd, token) then
+        fd2player[old_fd] = nil
+        fd2player[fd] = player
+        return true
+    end
 end
 
 skynet.start(function()
