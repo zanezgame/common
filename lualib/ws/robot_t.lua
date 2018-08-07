@@ -158,6 +158,7 @@ function M:_recv_binary(sock_buff)
 end
 
 function M:_send_binary(op, tbl)
+    --print("send_binary", opcode.toname(op), util.dump(tbl))
     local data = protobuf.encode(opcode.toname(op), tbl)
     --print("send", data, #data)
     self._ws:send_binary(string.pack(">Hs2", op, data))

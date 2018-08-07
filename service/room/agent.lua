@@ -13,8 +13,10 @@ end
 
 skynet.start(function()
     skynet.dispatch("lua", function(_, _, room_id, cmd, ...)
+        print(room_id, cmd)
         local room = rooms[room_id] or create_room(room_id)
-        util.ret(room[cmd](room, ...))
+        local f = assert(room[cmd], cmd)
+        util.ret(f(room, ...))
     end)
 end)
 

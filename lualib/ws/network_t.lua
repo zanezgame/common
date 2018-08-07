@@ -52,7 +52,7 @@ end
 
 function M:_send_binary(op, tbl)
     local data = protobuf.encode(opcode.toname(op), tbl)
-    print("send", #data)
+    --print("send", #data)
     self._ws:send_binary(string.pack(">Hs2", op, data))
 end
 
@@ -79,13 +79,11 @@ function M:_recv_binary(sock_buff)
     local opname = opcode.toname(op)
     local modulename = opcode.tomodule(op)
     local simplename = opcode.tosimplename(op)
-    if opcode.has_session(op) then
-        print(string.format("recv package, 0x%x %s", op, opname))
-    end
 
     local data = protobuf.decode(opname, buff, sz)
     util.printdump(data)
 
+    local player = self.player
     if not util.try(function()
         assert(player, "player nil")
         assert(player[modulename], string.format("module nil [%s.%s]", modulename, simplename))
