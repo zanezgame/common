@@ -81,7 +81,9 @@ function M:start()
 end
 
 function M:test(func)
-    local co = coroutine.create(func)
+    local co = coroutine.create(function()
+        util.try(func)  
+    end)
     self:_suspended(co)
 end
 
