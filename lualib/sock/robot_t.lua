@@ -35,7 +35,7 @@ function M:login()
     if resp == "error" then
         return
     end
-    print(ret, resp)
+    --print(ret, resp)
     local data = json.decode(resp)
     self._host = data.host
     self._port = data.port
@@ -49,19 +49,21 @@ function M:start()
     skynet.fork(function()
         while true do
             local buff = socket.read(self._fd)
+            if not buff then
+                self:offline()
+                return
+            end
             self:_recv(buff)
         end
     end)
  
     -- ping
-    if self.ping then
-        skynet.fork(function()
-            while true do
-                self:ping()
-                skynet.sleep(100*30)
-            end
-        end)
-    end
+    skynet.fork(function()
+        while true do
+            self:ping()
+            skynet.sleep(100*30)
+        end
+    end)
 
     -- tick
     self.tick = 0
@@ -105,9 +107,18 @@ function M:send(op, tbl)
             self._crypt_type, self._crypt_key, buffer, bufferlen)
     end)
 
-    print(string.format("send %s, csn:%d", opcode.toname(op), self._csn))
+    --print(string.format("send %s, csn:%d", opcode.toname(op), self._csn))
     socket.write(self._fd, data, len+2)
 end
+
+function M:ping()
+    -- overwrite
+end
+
+function M:offline()
+    -- overwrite
+end
+
 
 function M:_recv(sock_buff)
     local data      = packetc.new(sock_buff) 
@@ -129,7 +140,7 @@ function M:_recv(sock_buff)
     if self[funcname] then
         self[funcname](self, data) 
     end
-    print(string.format("recv %s, csn:%d ssn:%d", opname, csn, ssn))
+    --print(string.format("recv %s, csn:%d ssn:%d", opname, csn, ssn))
 
     local data = protobuf.decode(opname, buff, sz)
 

@@ -6,6 +6,7 @@ local util      = require "util"
 local opcode    = require "def.opcode"
 local errcode   = require "def.errcode"
 local protobuf  = require "protobuf"
+local md5       = require "md5"
 
 local M = class("network_t")
 function M:ctor(player)
@@ -21,6 +22,12 @@ function M:init(watchdog, gate, agent, fd)
     self._ssn = 0
     self._crypt_key = 0
     self._crypt_type = 0
+    self._token = nil
+end
+
+function M:create_token()
+    self._token = md5.crypt(string.format("%d%d", self.player.uid, os.time()), "Stupid")
+    return self._token
 end
 
 function M:call_watchdog(...)
@@ -55,7 +62,7 @@ function M:recv(op, csn, ssn, crypt_type, crypt_key, buff, sz)
 
     local data = protobuf.decode(opname, buff, sz)
     assert(type(data) == "table", data)
-    util.printdump(data)
+    --util.printdump(data)
 
     local ret = 0 -- 返回整数为错误码，table为返回客户端数据
     local mod = assert(self.player[modulename], modulename)
@@ -74,8 +81,12 @@ function M:recv(op, csn, ssn, crypt_type, crypt_key, buff, sz)
 end
 
 function M:reconnect(fd, token)
+    if self._token ~= token then
+        return false
+    end
     skynet.call(self._gate, "lua", "kick", self._fd)
     self._fd = fd
+    return true
 end
 
 function M:get_fd()
