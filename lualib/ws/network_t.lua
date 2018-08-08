@@ -81,7 +81,8 @@ function M:_recv_binary(sock_buff)
     local simplename = opcode.tosimplename(op)
 
     local data = protobuf.decode(opname, buff, sz)
-    util.printdump(data)
+    print("recv_binary", opname)
+    --util.printdump(data)
 
     local player = self.player
     if not util.try(function()

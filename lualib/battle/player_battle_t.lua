@@ -20,14 +20,25 @@ function M:base_data()
     }
 end
 
-function M:match()
+function M:match(type)
+    print("&&&& match")
+end
+
+function M:create_room()
 
 end
 
+function M:ready()
+
+end
+
+function M:giveup()
+
+end
 
 -- network
 function M:c2s_match(data)
-
+    return self:match(data.type) 
 end
 
 function M:c2s_create_room(data)
