@@ -4,7 +4,8 @@ local def = require "def"
 local battle_t = require "battle.battle_t"
 
 local M = class("battle_red5_t", battle_t)
-function M:ctor()
+function M:ctor(player)
+    self.player = player
     self.mode = def.BattleMode.RED5
 end
 

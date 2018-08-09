@@ -6,6 +6,7 @@ local reg = {
     REDIS = "db/redisd",
     MONGO = "db/mongod",
     MATCHCENTER = "room/matchcenter",
+    ROOMCENTER = "room/watchdog",
 }
 
 local M = {}

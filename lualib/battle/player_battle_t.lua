@@ -8,8 +8,9 @@ function M:ctor(player)
     self.player = assert(player, "battle need player")
     for _, t in pairs(def.BattleMode) do
        local battle_class = require(def.BattleClass[t])
-       self[t] = battle_class.new()
+       self[t] = battle_class.new(player)
     end
+    self.cur_battle = nil
 end
 
 function M:init_by_data(data)
@@ -22,17 +23,17 @@ function M:base_data()
 end
 
 function M:match(mode)
-    print("&&&& match")
     skynet.call(sname.MATCHCENTER, "lua", "match", mode, 
         self.player.uid, 1, skynet.self()) 
 end
 
 function M:matched(mode, targetid)
-    print("&&&& matched", mode, targetid)
+    self.cur_battle = assert(self[mode])
+    self.cur_battle:start(targetid)
 end
 
 function M:create_room()
-
+    
 end
 
 function M:ready()
