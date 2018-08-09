@@ -22,7 +22,8 @@ local count = 0
 function CMD.new_player(fd)
     socket.start(fd)
     local player = player_t.new()
-    player.net:init(skynet.self(), fd)
+    player.net:init(WATCHDOG, skynet.self(), fd)
+    fd2player[fd] = player
     count = count + 1
     return count >= MAX_COUNT
 end
@@ -33,7 +34,8 @@ function CMD.init(watchdog, max_count, proto)
     protobuf.register_file(proto)
 end
 
-function CMD.online(uid, fd)
+-- from player
+function CMD.player_online(uid, fd)
     local player = assert(fd2player[fd])
     uid2player[uid] = player
 end
@@ -46,23 +48,26 @@ function CMD.free_player(uid)
     count = count - 1
 end
 
+-- from watchdog
 function CMD.socket_close(fd)
     local player = assert(fd2player[fd])
     player:offline()
     fd2player[fd] = nil
 end
 
+
 skynet.start(function()
-    skynet.dispatch("lua", function(_, _, cmd1, cmd2, ...)
-        local f = CMD[cmd1]
+    skynet.dispatch("lua", function(_, _, arg1, arg2, arg3, ...)
+        local f = CMD[arg1]
         if f then
-            util.ret(f(cmd2, ...))
-        elseif player[cmd1] then
-            local module = player[cmd1]
+            util.ret(f(arg2, arg3, ...))
+        else
+            local player = assert(uid2player[arg1], arg1)
+            local module = assert(player[arg2], arg2)
             if type(module) == "function" then
-                util.ret(module(player, cmd2, ...))
+                util.ret(module(player, arg3, ...))
             else
-                util.ret(module[cmd2](module, ...))
+                util.ret(module[arg3](module, ...))
             end
         end
     end)

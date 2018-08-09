@@ -13,9 +13,10 @@ function M:ctor(player)
     self.player = assert(player, "network need player")
 end
 
-function M:init(agent, fd)
-    self._agent = agent
-    self._fd = fd
+function M:init(watchdog, agent, fd)
+    self._watchdog = assert(watchdog)
+    self._agent = assert(agent)
+    self._fd = assert(fd)
 
     local handler = {}
     function handler.open()
@@ -31,6 +32,18 @@ function M:init(agent, fd)
     function handler.close()
     end
     self._ws = ws_server.new(fd, handler)
+end
+
+function M:call_watchdog(...)
+    return skynet.call(self._watchdog, "lua", ...)
+end
+
+function M:call_agent(...)
+    return skynet.call(self._agent, "lua", ...)
+end
+
+function M:get_fd()
+    return self._fd
 end
 
 function M:send(...)

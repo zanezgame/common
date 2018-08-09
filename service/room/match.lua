@@ -4,13 +4,13 @@ local util          = require "util"
 local uid2info = {} -- uid -> info {uid, value, agent}
 local values = {} -- value -> uids
 
-local MOD        -- 匹配模式
+local MODE       -- 匹配模式
 local MAX_TIME   -- 匹配时长
 local MAX_RANGE  -- 匹配最大范围
 
 local CMD = {}
-function CMD.init(mod, max_time, max_range)
-    MOD = mod
+function CMD.init(mode, max_time, max_range)
+    MODE = mode
     MAX_TIME = max_time or 3
     MAX_RANGE = max_range or 0
 end
@@ -73,7 +73,7 @@ local function update()
         if info.ret >= 0 then
             local id1 = uid
             local id2 = info.ret
-            skynet.call(info.agent, "lua", "matched", uid, info.ret)
+            skynet.call(info.agent, "lua", uid, "battle", "matched", MODE, info.ret)
             uid2info[uid] = nil
             values[info.value][uid] = nil
         end

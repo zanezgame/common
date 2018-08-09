@@ -5,6 +5,7 @@ local reg = {
     PROTO = "proto_env",
     REDIS = "db/redisd",
     MONGO = "db/mongod",
+    MATCHCENTER = "room/matchcenter",
 }
 
 local M = {}

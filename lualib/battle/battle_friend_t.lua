@@ -5,17 +5,17 @@ local battle_t = require "battle.battle_t"
 
 local M = class("battle_friend_t", battle_t)
 function M:ctor()
-    self.type = def.BattleType.FRIEND
+    self.mode = def.BattleMode.FRIEND
 end
 
 function M:init_by_data(data)
     data = data or {}
-    self.type = data.type
+    self.mode = data.mode
 end
 
 function M:base_data()
     return {
-        type = self.type,
+        mode = self.mode,
     }
 end
 
