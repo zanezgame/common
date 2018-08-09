@@ -14,7 +14,7 @@ local MAX_COUNT
 
 local CMD = {}
 local fd2player = {}
-local uid2player = {}
+local acc2player = {}
 local count = 0
 
 skynet.register_protocol {
@@ -37,6 +37,7 @@ function CMD.init(gate, watchdog, max_count, proto)
     protobuf.register_file(proto)
 end
 
+-- from watchdog
 function CMD.new_player(fd)
     local player = player_t.new()
     player.net:init(WATCHDOG, GATE, skynet.self(), fd)
@@ -46,27 +47,30 @@ function CMD.new_player(fd)
     return count >= MAX_COUNT
 end
 
-function CMD.online(uid, fd)
-    local player = assert(fd2player[fd])
-    uid2player[uid] = player
+-- from watchdog
+function CMD.socket_close(acc, fd)
+    local player = assert(acc2player[acc])
+    player:offline()
+    fd2player[fd] = nil
 end
 
-function CMD.free_player(uid)
-    uid2player[uid] = nil
+-- from player
+function CMD.player_online(acc, fd)
+    local player = assert(fd2player[fd])
+    acc2player[acc] = player
+end
+
+function CMD.free_player(acc)
+    print("&&& agent free_player")
+    acc2player[acc] = nil
     if count == MAX_COUNT then
         skynet.call(WATCHDOG, "lua", "set_free", skynet.self())
     end
     count = count - 1
 end
 
-function CMD.socket_close(fd)
-    local player = assert(fd2player[fd])
-    player:offline()
-    fd2player[fd] = nil
-end
-
-function CMD.reconnect(fd, uid, token)
-    local player = uid2player[uid]
+function CMD.reconnect(fd, acc, token)
+    local player = acc2player[acc]
     if not player then
         return
     end

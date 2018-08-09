@@ -8,7 +8,8 @@ assert(player_path) -- 玩家逻辑(xxx.xxxplayer_t)
 local server = require(server_path)
 
 local GATE
-local uid2agent = {}    -- 每个玩家对应的agent
+local fd2acc = {}
+local acc2agent = {}    -- 每个玩家对应的agent
 local free_agents = {}  -- 空闲的agent addr -> true
 local full_agents = {}  -- 满员的agent addr -> true
 
@@ -44,7 +45,11 @@ function SOCKET.open(fd, addr)
 end
 
 local function close_socket(fd)
+    local acc = fd2acc[fd]
+    local agent = acc2agent[acc]
+    skynet.call(agent, "lua", "socket_close", acc, fd)
     skynet.call(GATE, "lua", "kick", fd)
+    fd2acc[fd] = nil
 end
 
 function SOCKET.close(fd)
@@ -63,7 +68,7 @@ function SOCKET.warning(fd, size)
 end
 
 function SOCKET.data(fd, msg)
-    pront("socket data", fd, msg)
+    print("socket data", fd, msg)
 end
 
 local CMD = {}
@@ -84,21 +89,23 @@ function CMD.set_free(agent)
     full_agents[agent] = nil
 end
 
--- 上线后agent绑定uid，下线缓存一段时间
-function CMD.player_online(agent, uid)
-    uid2agent[uid] = agent
+-- 上线后agent绑定acc，下线缓存一段时间
+function CMD.player_online(agent, acc, fd)
+    acc2agent[acc] = agent
+    fd2acc[fd] = acc
 end
 
 -- 下线一段时间后调用
-function CMD.player_destroy(agent, uid)
-    uid2agent[uid] = nil
+function CMD.free_player(agent, acc)
+    acc2agent[acc] = nil
     free_agents[agent] = true
     full_agents[agent] = false
+    print("&&&&& watchdog free_player")
 end
 
-function CMD.reconnect(fd, uid, token)
-    local agent = uid2agent[uid] 
-    if agent and skynet.call(agent, "lua", "reconnect", fd, uid, token) then
+function CMD.reconnect(fd, acc, passwd)
+    local agent = acc2agent[acc] 
+    if agent and skynet.call(agent, "lua", "reconnect", fd, acc, token) then
         return agent
     end
 end

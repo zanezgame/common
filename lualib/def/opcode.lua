@@ -75,8 +75,6 @@ REG(0x1001, "ping.s2c_ping", false, NOSESSION)
 -- login
 REG(0x1010, "login.c2s_login")
 REG(0x1011, "login.s2c_login")
-REG(0x1012, "login.c2s_reconnect")
-REG(0x1013, "login.s2c_reconnect")
 
 -- user
 REG(0x1020, "user.c2s_data")
