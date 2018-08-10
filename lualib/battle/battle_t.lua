@@ -67,8 +67,16 @@ function M:ready()
     self:call_room("ready")
 end
 
-function M:sync(score)
-    self:call_room("sync", score)
+function M:upload_score(score)
+    self:call_room("upload_score", score)
+end
+
+function M:sync_score(uid, score)
+    print("sync_score", score)
+    self:send(opcode.battle.s2c_sync_score, {
+        uid = uid,
+        score = score,
+    })
 end
 
 function M:giveup()

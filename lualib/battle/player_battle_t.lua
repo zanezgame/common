@@ -50,11 +50,11 @@ function M:ready()
     self.battle:ready()
 end
 
-function M:sync(score)
+function M:upload_score(score)
     if not self.battle then
         return errocode.NotInBattle
     end
-    self.battle:sync(score)
+    self.battle:upload_score(score)
 end
 
 function M:giveup()
@@ -77,8 +77,8 @@ function M:c2s_ready(data)
     return self:ready()
 end
 
-function M:c2s_sync(data)
-    return self:sync(data.score)
+function M:c2s_upload_score(data)
+    return self:upload_score(data.score)
 end
 
 function M:c2s_giveup(data)
