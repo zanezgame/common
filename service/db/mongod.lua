@@ -51,6 +51,23 @@ function CMD.drop(name)
     return db[name]:drop()
 end
 
+function CMD.get(key, default)
+    local ret = db.global:findOne({key = key})
+    if ret then
+        return util.str2num(ret.value)
+    else
+        db.global:safe_insert({key = key, value = default})
+        return default
+    end
+end
+
+function CMD.set(key, value)
+    db.global:findAndModify({
+        query = {key = key},
+        update = {key = key, value = value},
+    })
+end
+
 skynet.start(function()
     db = mongo.client(conf.mongo)[conf.mongo.name]
     skynet.dispatch("lua", function(_, _, cmd, ...)

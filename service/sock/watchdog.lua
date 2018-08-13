@@ -37,7 +37,7 @@ function SOCKET.open(fd, addr)
     if not agent then
         agent = create_agent()
     end
-	local is_full = skynet.call(agent, "lua", "new_player", fd)
+	local is_full = skynet.call(agent, "lua", "new_player", fd, addr)
     if is_full then
         free_agents[agent] = nil
         full_agents[agent] = true

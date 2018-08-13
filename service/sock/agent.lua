@@ -38,9 +38,9 @@ function CMD.init(gate, watchdog, max_count, proto)
 end
 
 -- from watchdog
-function CMD.new_player(fd)
+function CMD.new_player(fd, ip)
     local player = player_t.new()
-    player.net:init(WATCHDOG, GATE, skynet.self(), fd)
+    player.net:init(WATCHDOG, GATE, skynet.self(), fd, ip)
     fd2player[fd] = player
 	skynet.call(GATE, "lua", "forward", fd)
     count = count + 1

@@ -13,11 +13,12 @@ function M:ctor(player)
     self.player = assert(player, "network need player")
 end
 
-function M:init(watchdog, gate, agent, fd)
+function M:init(watchdog, gate, agent, fd, ip)
     self._watchdog = assert(watchdog)
     self._gate = assert(gate)
     self._agent = assert(agent)
     self._fd = assert(fd)
+    self._ip = assert(ip)
     self._csn = 0
     self._ssn = 0
     self._crypt_key = 0
@@ -80,10 +81,7 @@ function M:recv(op, csn, ssn, crypt_type, crypt_key, buff, sz)
     self:send(op+1, ret)
 end
 
-function M:reconnect(fd, token)
-    if self._token ~= token then
-        return false
-    end
+function M:reconnect(fd)
     skynet.call(self._gate, "lua", "kick", self._fd)
     self._fd = fd
     return true
@@ -95,6 +93,10 @@ end
 
 function M:get_agent()
     return self._agent
+end
+
+function M:get_ip()
+    return self._ip
 end
 
 return M

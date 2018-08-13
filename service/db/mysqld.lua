@@ -22,8 +22,9 @@ skynet.start(function()
         max_packet_size = 1024 * 1024,
         on_connect = on_connect
     })
-    skynet.dispatch("lua", function(_, _, ...)
-        util.ret(db:query(...))
+    skynet.dispatch("lua", function(_, _, cmd, ...)
+        local f = assert(db[cmd])
+        util.ret(f(db, ...))
     end)
 end)
 

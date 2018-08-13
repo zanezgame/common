@@ -27,7 +27,7 @@ function M:ctor(proj_name)
     self._waiting = {} -- co -> time
 end
 
-function M:login()
+function M:login(acc)
     --local ret, resp = http.get("http://www.kaizhan8.com:8888/login/req_login", {
     local ret, resp = http.get("http://huangjx.top/login/req_login", {
         proj_name = self._proj_name 
@@ -41,8 +41,9 @@ function M:login()
     self._port = data.port
 end
 
-function M:start()
-    self:login()
+function M:start(host, port)
+    self._host = assert(host)
+    self._port = assert(port)
     self._fd = socket.open(self._host, self._port)
     assert(self._fd)
 
