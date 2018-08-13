@@ -14,7 +14,7 @@ local MAX_COUNT
 
 local CMD = {}
 local fd2player = {}
-local acc2player = {}
+local uid2player = {}
 local count = 0
 
 skynet.register_protocol {
@@ -48,29 +48,29 @@ function CMD.new_player(fd, ip)
 end
 
 -- from watchdog
-function CMD.socket_close(acc, fd)
-    local player = assert(acc2player[acc])
+function CMD.socket_close(uid, fd)
+    local player = assert(uid2player[uid])
     player:offline()
     fd2player[fd] = nil
 end
 
 -- from player
-function CMD.player_online(acc, fd)
+function CMD.player_online(uid, fd)
     local player = assert(fd2player[fd])
-    acc2player[acc] = player
+    uid2player[uid] = player
 end
 
-function CMD.free_player(acc)
+function CMD.free_player(uid)
     print("&&& agent free_player")
-    acc2player[acc] = nil
+    uid2player[uid] = nil
     if count == MAX_COUNT then
         skynet.call(WATCHDOG, "lua", "set_free", skynet.self())
     end
     count = count - 1
 end
 
-function CMD.reconnect(fd, acc, token)
-    local player = acc2player[acc]
+function CMD.reconnect(fd, uid, token)
+    local player = uid2player[uid]
     if not player then
         return
     end
