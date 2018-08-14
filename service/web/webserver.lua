@@ -29,7 +29,7 @@ function on_message(cmd, data)
         local ret = player[cmd](player, player:unpack(data))
         return player:pack(ret or "")
     else
-        return "error"
+        return '{"err":-1}'
     end
 end
 
@@ -46,6 +46,7 @@ skynet.start(function()
         socket.start(id)
         -- limit request body size to 8192 (you can pass nil to unlimit)
         local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 8192)
+        --print(string.format("recv code:%s, url:%s, method:%s, header:%s, body:%s", code, url, method, header, body))
         if code then
             if code ~= 200 then
                 response(id, code)
