@@ -58,7 +58,7 @@ end
 function CMD.error(str)
     local str = string.format("[%s] %s", os.date("%H:%M:%S", os.time()), str) 
     local file = io.open(string.format("%s/log/error.log", conf.workspace), "a+")
-    file:write(str)
+    file:write(str.."\n")
     file:flush()
     file:close()
 
@@ -69,5 +69,17 @@ skynet.start(function()
     skynet.dispatch("lua", function(_, _, cmd, ...)
         assert(CMD[cmd], cmd)(...)
         -- no return, don't call this service, use send
+    end)
+    skynet.fork(function()
+        while true do
+            local cur_time = os.time()
+            for k, v in pairs(logs) do
+                if cur_time - v.last_time > 3600 then
+                    v.file:close()
+                    logs[k] = nil
+                end
+            end
+            skynet.sleep(100)
+        end
     end)
 end)
