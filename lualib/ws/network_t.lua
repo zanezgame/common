@@ -76,7 +76,7 @@ function M:_recv_text(t)
         -- todo change name
         return message
     end
-    local resp_id = "S2c"..string.match(recv_id, "C2s(.+)")
+    local resp_id = "s2c_"..string.match(recv_id, "c2s_(.+)")
     assert(self.player[recv_id], "net handler nil")
     if self.player[recv_id] then
         local msg = self.player[recv_id](self.player, data.msg) or {}

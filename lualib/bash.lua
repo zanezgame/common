@@ -102,7 +102,7 @@ function bash(expr, ...)
         end)
     end
     local cmd = eval(expr)
-    skynet.error(cmd)
+    --skynet.error(cmd)
     local ret = io.popen(cmd):read("*a")
     if ret ~= "" then
         --skynet.error(ret)

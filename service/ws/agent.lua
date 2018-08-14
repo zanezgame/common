@@ -31,7 +31,9 @@ end
 function CMD.init(watchdog, max_count, proto)
     WATCHDOG = assert(watchdog)
     MAX_COUNT = max_count or 100
-    protobuf.register_file(proto)
+    if proto then
+        protobuf.register_file(proto)
+    end
 end
 
 -- from player
