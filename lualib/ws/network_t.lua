@@ -56,9 +56,9 @@ function M:send(...)
     end
 end
 
-function M:_send_text(id, msg) -- 兼容text
+function M:_send_text(op, msg) -- 兼容text
     self._ws:send_text(json.encode({
-        id  = id,
+        op  = op,
         msg = msg,
     }))
 end
@@ -71,20 +71,16 @@ end
 
 function M:_recv_text(t)
     local data = json.decode(t)
-    local recv_id = data.id
-    if recv_id == "HearBeatPing" then
-        -- todo change name
-        return message
-    end
-    local resp_id = "s2c_"..string.match(recv_id, "c2s_(.+)")
-    assert(self.player[recv_id], "net handler nil")
-    if self.player[recv_id] then
-        local msg = self.player[recv_id](self.player, data.msg) or {}
-        self._ws:send_text(json.encode({
-            id = resp_id,
-            msg = msg,
-        }))
-    end
+    local recv_op = data.op
+    local modname, recv_op = string.match(data.op, "([^.]+).(.+)")
+    local mod = assert(self.player[modname], modname)
+    local f =assert(mod[recv_op], recv_op)
+    local resp_op = modname..".s2c_"..string.match(recv_op, "c2s_(.+)")
+    local msg = f(mod, data.msg) or {}
+    self._ws:send_text(json.encode({
+        op = resp_op,
+        msg = msg,
+    }))
 end
 
 function M:_recv_binary(sock_buff)

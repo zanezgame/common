@@ -111,7 +111,6 @@ function M:_recv_text(text)
     --util.printdump(data)
     local recv_id = data.id
     --print("recv", recv_id)
-    if recv_id == "HearBeatPing" then return end
     local req_id = "C2s"..string.match(recv_id, "S2c(.+)")
     if self[recv_id] then
         self[recv_id](self, data.msg)     
