@@ -42,6 +42,9 @@ function player_skynet_t:c2s_all_service()
         v.id = i
         v.address = skynet.address(addr)
     end
+    table.sort(list, function(a, b)
+        return a.addr < b.addr
+    end)
     return {service_list = list}
 end
 
