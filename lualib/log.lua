@@ -1,19 +1,15 @@
 local skynet = require "skynet"
-local sname = require "sname"
 
 local M = {}
 function M.trace(sys)
     return function(fmt, ...)
-        skynet.send(sname.LOG, "lua", "trace", sys, string.format(fmt, ...))
+        skynet.send(".logger", "lua", "trace", skynet.self(), sys, string.format(fmt, ...))
     end
 end
 function M.player(uid)
     return function(fmt, ...)
-        skynet.send(sname.LOG, "lua", "player", uid, string.format(fmt, ...))
+        skynet.send(".logger", "lua", "player", skynet.self(), uid, string.format(fmt, ...))
     end
-end
-function M.error(fmt, ...)
-    skynet.send(sname.LOG, "lua", "error", string.format(fmt, ...))
 end
 
 return M

@@ -1,7 +1,6 @@
 -- 一些通用服务名
 local skynet = require "skynet.manager"
 local reg = {
-    LOG = "logger",
     WEB = "web/webclient",
     PROTO = "proto_env",
     REDIS = "db/redisd",

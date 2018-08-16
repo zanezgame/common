@@ -48,4 +48,8 @@ function player_skynet_t:c2s_all_service()
     return {service_list = list}
 end
 
+function player_skynet_t:c2s_node_config()
+
+end
+
 return player_skynet_t
