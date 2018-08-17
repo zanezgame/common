@@ -8,6 +8,7 @@ local reg = {
     MYSQL = "db/mysqld",
     MATCHCENTER = "room/matchcenter",
     ROOMCENTER = "room/watchdog",
+    ALERT = "alert", -- 警报服务
 }
 
 local M = {}

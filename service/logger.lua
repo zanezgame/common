@@ -6,13 +6,14 @@
 local skynet = require "skynet.manager"
 local date_helper = require "date_helper"
 local conf = require "conf"
+local sname = require "sname"
 
 require "bash"
 
 local function write_log(file, addr, str)
     local str = string.format("[%08x][%s] %s", addr, os.date("%Y-%m-%d %H:%M:%S", os.time()), str) 
     if string.match(str, "\n(%w+ %w+)") == "stack traceback" then
-        print("wahahahaha")
+        skynet.send(sname.ALERT, "lua", "traceback", str)
     end
     print(str)
 
