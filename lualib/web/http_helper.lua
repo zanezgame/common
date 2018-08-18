@@ -24,17 +24,4 @@ function M.url_encoding(tbl)
     return table.concat(data, "&")
 end
 
--- 公网ip
-function M.pnet_addr()
-    local ret, resp = M.get('http://members.3322.org/dyndns/getip')
-    local addr = string.gsub(resp, "\n", "")
-    return addr
-end
-
--- 内网ip
-function M.inet_addr()
-    local ret = bash "ifconfig eth0" 
-    return string.match(ret, "inet addr:([^%s]+)")
-end
-
 return M

@@ -7,8 +7,10 @@ local skynet = require "skynet.manager"
 local date_helper = require "date_helper"
 local conf = require "conf"
 local sname = require "sname"
-
 require "bash"
+
+local errfile = io.open(string.format("%s/log/%s.log", 
+    conf.workspace,skynet.getenv("clustername") or "error"), "w+")
 
 local function write_log(file, addr, str)
     local str = string.format("[%08x][%s] %s", addr, os.date("%Y-%m-%d %H:%M:%S", os.time()), str) 
@@ -17,7 +19,10 @@ local function write_log(file, addr, str)
             skynet.send(sname.ALERT, "lua", "traceback", str)
         end
     end
-    print(str)
+
+    if file == errfile then
+        print(str)
+    end
 
     file:write(str.."\n")
     file:flush()
@@ -42,6 +47,7 @@ function CMD.trace(addr, sys, str)
     log.last_time = os.time()
 
     write_log(log.file, addr, str)
+    write_log(errfile, addr, str) 
 end
 
 function CMD.player(addr, uid, str)
@@ -62,16 +68,16 @@ function CMD.player(addr, uid, str)
     log.last_time = os.time()
 
     write_log(log.file, addr, str)
+    write_log(errfile, addr, str) 
 end
 
-local errfile = io.open(string.format("%s/log/%s.log", 
-    conf.workspace,skynet.getenv("clustername") or "error"), "w+")
+
 skynet.register_protocol {
     name = "text",
     id = skynet.PTYPE_TEXT,
     unpack = skynet.tostring,
-    dispatch = function(_, addr, msg)
-        write_log(errfile, addr, msg) 
+    dispatch = function(_, addr, str)
+        write_log(errfile, addr, str) 
     end
 }
 

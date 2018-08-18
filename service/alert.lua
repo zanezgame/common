@@ -20,7 +20,7 @@ local function get_token()
 end
 
 local CMD = {}
-function CMD.traceback(str)
+function CMD.traceback(err)
     --[[local ret, resp = http.post(host.."/message/send_to_conversation?access_token="..token, json.encode {
         sender = "manager3375",
         cid ="dcb66a48183e3cfe8fbce9207c3ecec9",
@@ -30,6 +30,11 @@ function CMD.traceback(str)
         }   
     })
     print(ret, resp)]]
+    local info = require "clusterinfo"
+    local path = string.format("%s/log/%s.log", info.workspace, skynet.getenv("clustername") or "error")
+    local str = string.format("服务器Traceback\n项目:%s\n节点:%s\n公网ip:%s\n内网ip:%s\n进程:%s\n路径:%s\n自己上去看log，傻逼!",
+        info.proj_name, info.clustername, info.pnet_addr, info.inet_addr, info.pid, path)
+    --print(str)
     CMD.test(str) 
 end
 
