@@ -13,7 +13,9 @@ require "bash"
 local function write_log(file, addr, str)
     local str = string.format("[%08x][%s] %s", addr, os.date("%Y-%m-%d %H:%M:%S", os.time()), str) 
     if string.match(str, "\n(%w+ %w+)") == "stack traceback" then
-        skynet.send(sname.ALERT, "lua", "traceback", str)
+        if conf.alert and conf.alert.enable then
+            skynet.send(sname.ALERT, "lua", "traceback", str)
+        end
     end
     print(str)
 

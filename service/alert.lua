@@ -10,7 +10,7 @@ require "bash"
 
 local host = "https://oapi.dingtalk.com"
 local function get_token()
-    local ret, resp = http.get(host.."/gettoken", {corpid = conf.dingid, corpsecret = conf.dingsecret})
+    local ret, resp = http.get(host.."/gettoken", {corpid = conf.alert.corpid, corpsecret = conf.alert.corpsecret})
     if ret then
         local data = json.decode(resp)
         return data.access_token
@@ -37,13 +37,14 @@ function CMD.test(str)
     -- 暂时先用curl发https post
     local token = get_token()
     local sh = string.format('curl -H "Content-Type:application/json" -X POST -d \'%s\' %s/chat/send?access_token=%s', json.encode {
-        sender = "manager3375",
-        chatid = "chatc342986381ccae6028a690369580d9d0",
+        sender = conf.alert.sender,
+        chatid = conf.alert.chatid,
         msgtype = "text",
         text = { 
             content = str,
         } 
     }, host, token)
+    print(sh)
     bash(sh)
 
 end
