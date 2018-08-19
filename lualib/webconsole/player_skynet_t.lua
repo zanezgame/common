@@ -5,8 +5,8 @@ local log = require "log"
 
 local trace = log.trace("webconsole")
 
-local player_skynet_t = class("player_skynet_t")
-function player_skynet_t:ctor(player)
+local M = class("player_skynet_t")
+function M:ctor(player)
     self.player = player
 end
 
@@ -18,7 +18,7 @@ local function debug_send(addr, cmd, ...)
     return skynet.send(addr, "debug", cmd, ...)
 end
 
-function player_skynet_t:c2s_all_service()
+function M:c2s_all_service()
     local list = {} 
     
     local all = skynet.call(".launcher", "lua", "LIST")
@@ -48,8 +48,8 @@ function player_skynet_t:c2s_all_service()
     return {service_list = list}
 end
 
-function player_skynet_t:c2s_node_config()
+function M:c2s_node_config()
 
 end
 
-return player_skynet_t
+return M
