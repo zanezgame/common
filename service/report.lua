@@ -4,6 +4,10 @@ local skynet = require "skynet"
 local cluster = require "skynet.cluster"
 local conf = require "conf"
 local util = require "util"
+local log = require "log"
+local print = log.print("report")
+
+require "bash"
 
 local function send(...)
     print("send", conf.clustername.monitor, ...)
@@ -30,8 +34,15 @@ function CMD.start()
 end
 
 function CMD.ping()
+    local info = require "clusterinfo"
+    if not info.pid then
+        return
+    end
+    
+    local ret = bash(string.format('ps -p %d u', info.pid))
+    local user, pid, cpu, mem, vsz, rss = string.match(ret, "(%w+)%s+(%d+)%s+(%d+.%d+)%s+(%d+.%d+)%s+(%w+)%s+(%w+)")
     util.try(function()
-        send("node_ping", addr)
+        send("node_ping", addr, tonumber(cpu), tonumber(rss))
     end)
 end
 
