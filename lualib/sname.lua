@@ -1,4 +1,4 @@
--- 一些通用服务名
+-- 一些通用服务名, 第一次引用的自动创建
 local skynet = require "skynet.manager"
 local reg = {
     WEB = "web/webclient",
@@ -9,6 +9,7 @@ local reg = {
     MATCHCENTER = "room/matchcenter",
     ROOMCENTER = "room/watchdog",
     ALERT = "alert", -- 警报服务
+    REPORT = "report", -- 自动向monitor发送报告
 }
 
 local M = {}
