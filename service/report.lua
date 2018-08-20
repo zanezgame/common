@@ -2,6 +2,7 @@
 --
 local skynet = require "skynet"
 local cluster = require "skynet.cluster"
+local info = require "clusterinfo"
 local conf = require "conf"
 local util = require "util"
 local log = require "log"
@@ -23,7 +24,8 @@ local addr = conf.cluster.addr
 local CMD = {}
 function CMD.start()
     util.try(function()
-        call("node_start", conf.cluster.name, conf.cluster.addr, conf.proj_name)
+        call("node_start", conf.cluster.name, conf.cluster.addr, conf.proj_name, 
+            info.pnet_addr, info.inet_addr, info.pid)
     end)
     skynet.fork(function()
         while true do
@@ -34,7 +36,6 @@ function CMD.start()
 end
 
 function CMD.ping()
-    local info = require "clusterinfo"
     if not info.pid then
         return
     end

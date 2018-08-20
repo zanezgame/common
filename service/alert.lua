@@ -35,7 +35,14 @@ function CMD.traceback(err)
     local str = string.format("服务器Traceback\n项目:%s\n节点:%s\n公网ip:%s\n内网ip:%s\n进程:%s\n路径:%s\n自己上去看log，傻逼!",
         info.proj_name, info.clustername, info.pnet_addr, info.inet_addr, info.pid, path)
     --print(str)
-    CMD.test(str) 
+    --CMD.test(str) 
+end
+
+function CMD.node_dead(proj_name, clustername, pnet_addr, inet_addr, pid, cpu, mem)
+    local str = string.format("救命啊，有节点挂掉了!\n项目:%s\n节点:%s\n公网ip:%s\n内网ip:%s\n进程: pid:%s CPU:%s MEM:%.1fM",
+        proj_name, clustername, pnet_addr, inet_addr, pid, cpu, mem/1024) 
+    trace(str)
+    CMD.test(str)
 end
 
 function CMD.test(str)
