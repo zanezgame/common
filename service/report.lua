@@ -24,8 +24,8 @@ local addr = conf.cluster.addr
 local CMD = {}
 function CMD.start()
     util.try(function()
-        call("node_start", conf.cluster.name, conf.cluster.addr, conf.proj_name, 
-            info.pnet_addr, info.inet_addr, info.pid)
+        call("node_start", conf.cluster.name, conf.cluster.addr, conf.proj_name, info.pnet_addr, info.inet_addr, 
+            info.pid, string.format("%s:%s", conf.webconsole.host, conf.webconsole.port))
     end)
     skynet.fork(function()
         while true do

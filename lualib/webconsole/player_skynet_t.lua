@@ -58,13 +58,13 @@ function M:c2s_node_config()
         pnet_addr = info.pnet_addr,
         inet_addr = info.inet_addr,
         pid = info.pid,
-        profile = string.format("CPU:%sMEM:%.fM", profile.cpu, profile.mem/1024),
+        profile = profile and string.format("CPU:%sMEM:%.fM", profile.cpu, profile.mem/1024),
         gate = conf.gate and string.format("%s:%s", conf.gate.host, conf.gate.port),
         webconsole = conf.webconsole and string.format("%s:%s", conf.webconsole.host, conf.webconsole.port),
-        mongo = conf.mongo and string.format("%s:%s", conf.mongo.host, conf.mongo.port, conf.mongo.name),
+        mongo = conf.mongo and string.format("%s:%s[%s]", conf.mongo.host, conf.mongo.port, conf.mongo.name),
         redis = conf.redis and string.format("%s:%s", conf.redis.host, conf.redis.port),
-        mysql = conf.mysql and string.format("%s:%s", conf.mysql.host, conf.mysql.port),
-        is_alert = conf.alert and conf.alert.enable,
+        mysql = conf.mysql and string.format("%s:%s[%s]", conf.mysql.host, conf.mysql.port, conf.mysql.name),
+        alert_enable = conf.alert and conf.alert.enable,
     }
 end
 
