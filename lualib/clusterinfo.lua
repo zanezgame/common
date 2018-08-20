@@ -4,6 +4,7 @@
 local skynet = require "skynet"
 local http = require "web.http_helper"
 local conf = require "conf"
+local util = require "util"
 require "bash"
 
 local M = {}
@@ -51,6 +52,17 @@ function M._pid()
     end
     local pid = bash("cat %s", filename)
     return string.gsub(pid, "\n", "")
+end
+
+function M.get_profile()
+    local pid = M.pid
+    if not pid then return end
+    local ret = bash(string.format('ps -p %d u', pid))
+    local list = util.split(string.match(ret, '\n(.+)'), ' ')
+    return {
+        cpu = tonumber(list[3]),
+        mem = tonumber(list[6]),
+    }
 end
 
 function M._proj_name()

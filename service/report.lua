@@ -40,10 +40,9 @@ function CMD.ping()
         return
     end
     
-    local ret = bash(string.format('ps -p %d u', info.pid))
-    local user, pid, cpu, mem, vsz, rss = string.match(ret, "(%w+)%s+(%d+)%s+(%d+.%d+)%s+(%d+.%d+)%s+(%w+)%s+(%w+)")
+    local profile = info.profile 
     util.try(function()
-        send("node_ping", addr, tonumber(cpu), tonumber(rss))
+        send("node_ping", addr, profile.cpu, profile.mem)
     end)
 end
 

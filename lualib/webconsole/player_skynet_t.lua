@@ -1,6 +1,7 @@
 local skynet = require "skynet"
 local class = require "class"
 local util = require "util"
+local conf = require "conf"
 local log = require "log"
 
 local trace = log.trace("webconsole")
@@ -49,7 +50,22 @@ function M:c2s_all_service()
 end
 
 function M:c2s_node_config()
-
+    local info = require "clusterinfo"
+    local profile = info.profile
+    return {
+        proj_name = conf.proj_name,
+        clustername = conf.cluster.name,
+        pnet_addr = info.pnet_addr,
+        inet_addr = info.inet_addr,
+        pid = info.pid,
+        profile = string.format("CPU:%sMEM:%.fM", profile.cpu, profile.mem/1024),
+        gate = conf.gate and string.format("%s:%s", conf.gate.host, conf.gate.port),
+        webconsole = conf.webconsole and string.format("%s:%s", conf.webconsole.host, conf.webconsole.port),
+        mongo = conf.mongo and string.format("%s:%s", conf.mongo.host, conf.mongo.port, conf.mongo.name),
+        redis = conf.redis and string.format("%s:%s", conf.redis.host, conf.redis.port),
+        mysql = conf.mysql and string.format("%s:%s", conf.mysql.host, conf.mysql.port),
+        is_alert = conf.alert and conf.alert.enable,
+    }
 end
 
 return M
