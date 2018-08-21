@@ -1,5 +1,8 @@
 local skynet = require "skynet"
 
+local tostring = tostring
+local select   = select
+
 local M = {}
 function M.trace(sys)
     return function(fmt, ...)
@@ -9,7 +12,12 @@ end
 
 function M.print(sys)
     return function(...)
-        skynet.send(".logger", "lua", "trace", skynet.self(), sys, table.concat(table.pack(...), ' '))
+        local args = {}
+        for i = 1, select('#', ...) do
+            args[i] = tostring(select(i, ...))
+        end
+        local str = table.concat(args, " ")
+        skynet.send(".logger", "lua", "trace", skynet.self(), sys, str)
     end
 end
 
