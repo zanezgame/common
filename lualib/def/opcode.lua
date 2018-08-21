@@ -30,7 +30,7 @@ local function REG(code, message_name, urlrequest, no_session)
     code2name[code] = message_name
     code2urlrequest[code] = urlrequest
     code2no_session[code] = no_session 
-    code2module[code] = string.match(message_name, "^[^.]+")
+    code2module[code] = string.lower(string.match(message_name, "^[^.]+"))
     code2simplename[code] = string.match(message_name, "[^.]+$")
 end
 
@@ -54,30 +54,23 @@ function opcode.urlrequest(code)
     return code2urlrequest[code]
 end
 
---
--- connection
---
-REG(0x00F1, "connection.connected")
-REG(0x00F3, "connection.disconnected")
-REG(0x00F5, "connection.ioerror")
-
 ----------------------------------------------------------------
 -- S2C 服务器主动发给客户端的封包    
-REG(0x0111, "user.s2c_log", false, NOSESSION)
-REG(0x0113, "user.s2c_text", false, NOSESSION)
+REG(0x0111, "User.s2c_log", false, NOSESSION)
+REG(0x0113, "User.s2c_text", false, NOSESSION)
      
 ----------------------------------------------------------------
 -- RPC 客户端请求的RPC封包，必须成对 ，服务端协议号加1
 -- ping 
-REG(0x1000, "ping.c2s_ping", false, NOSESSION)
-REG(0x1001, "ping.s2c_ping", false, NOSESSION)
+REG(0x1000, "Ping.c2s_ping", false, NOSESSION)
+REG(0x1001, "Ping.s2c_ping", false, NOSESSION)
 
 -- login
-REG(0x1010, "login.c2s_login")
-REG(0x1011, "login.s2c_login")
+REG(0x1010, "Login.c2s_login")
+REG(0x1011, "Login.s2c_login")
 
 -- user
-REG(0x1020, "user.c2s_data")
-REG(0x1021, "user.s2c_data")
+REG(0x1020, "User.c2s_data")
+REG(0x1021, "User.s2c_data")
 
 return opcode
