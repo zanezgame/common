@@ -11,12 +11,12 @@ local print = log.print("report")
 require "bash"
 
 local function send(...)
-    print("send", conf.clustername.monitor, ...)
+    --print("send", conf.clustername.monitor, ...)
     cluster.send("monitor", "svr", ...) 
 end
 
 local function call(...)
-    print("call", conf.clustername.monitor, ...)
+    --print("call", conf.clustername.monitor, ...)
     cluster.call("monitor", "svr", ...)
 end
 
@@ -37,6 +37,7 @@ end
 
 function CMD.ping()
     if not info.pid then
+        send("node_ping", addr, 0, 0)
         return
     end
     

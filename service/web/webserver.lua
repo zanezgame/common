@@ -80,6 +80,10 @@ if server_path then
 end
 
 skynet.start(function()
+    if server then
+        server:start()
+    end
+
     local agent = {}
     for i= 1, preload do
         agent[i] = skynet.newservice(SERVICE_NAME, "agent", server_path, player_path, port, preload, skynet.self())
@@ -104,10 +108,6 @@ skynet.start(function()
             util.ret(f[subcmd](f, ...))
         end
     end)
-
-    if server then
-        server:start()
-    end
 end)
 
 else
