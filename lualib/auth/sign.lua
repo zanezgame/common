@@ -6,7 +6,7 @@ local table_sort    = table.sort
 local table_concat  = table.concat
 
 local M = {}
-function M.sign_url(args)
+function M.md5_args(args)
     local list = {} 
     for k, v in pairs(args) do
         list[#list+1] = string_format("%s=%s", k, v)
