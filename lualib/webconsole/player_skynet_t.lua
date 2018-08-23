@@ -3,6 +3,7 @@ local class = require "class"
 local util = require "util"
 local conf = require "conf"
 local log = require "log"
+local gm = require "gm"
 
 local trace = log.trace("webconsole")
 
@@ -66,6 +67,53 @@ function M:c2s_node_config()
         mysql = conf.mysql and string.format("%s:%s[%s]", conf.mysql.host, conf.mysql.port, conf.mysql.name),
         alert_enable = conf.alert and conf.alert.enable,
     }
+end
+
+function M:c2s_get_blacklist()
+    trace("get_blacklist")
+    local list = require "ip.blacklist"
+    return {list = table.concat(list.list(), "\n")}
+end
+
+function M:c2s_set_blacklist(data)
+    trace("set_blacklist")
+    local list = require "ip.blacklist"
+    list.clear()
+    for ip in string.gmatch(data.list, "[^\n]+") do
+        trace("add black ip:%s", ip)
+        list.add(ip)
+    end
+end
+
+function M:c2s_get_whitelist()
+    trace("get_blacklist")
+    local list = require "ip.whitelist"
+    return {list = table.concat(list.list(), "\n")}
+end
+
+function M:c2s_set_whitelist(data)
+    trace("set_blacklist")
+    local list = require "ip.whitelist"
+    list.clear()
+    for ip in string.gmatch(data.list, "[^\n]+") do
+        trace("add black ip:%s", ip)
+        list.add(ip)
+    end
+end
+
+function M:c2s_run_gm(data)
+    local args = {}
+    for arg in string.gmatch(data.cmd, "[^ ]+") do
+        table.insert(args, arg)
+    end
+    local modname = args[1]
+    local cmd = args[2]
+    if not modname or not cmd then
+        return {ret = "格式错误"}
+    end
+    table.remove(args, 1)
+    table.remove(args, 1)
+    return {ret = gm.run(modname, cmd, table.unpack(args))}
 end
 
 return M
