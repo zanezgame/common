@@ -59,10 +59,11 @@ sh etc.sh game gamed #生成启动配置, etc.sh [配置名] [启动脚本] [是
         end)
     end)
 
-## 日志服务
+## logger服务
     文件fd，保存一段时间，自动关闭
     系统log分系统存, 一天一份日志
     玩家log分uid存，一天一份日志
     所有的日志都会用skynet.error再输入一遍，终端模式下标准输出，或者写到skynet配置的logpath目录下
     
-    
+## sname服务
+    定义一些常用的服务，第一次引用的时候创建一个unique服务，同一节点通用，通常还会再封装一层api。参照MONGO的用法。   
