@@ -5,6 +5,9 @@ local sockethelper  = require "http.sockethelper"
 local urllib        = require "http.url"
 local json          = require "cjson"
 local util          = require "util"
+local conf          = require "conf"
+local whitelist     = require "ip.whitelist"
+local blacklist     = require "ip.blacklist"
 
 local table = table
 local string = string
@@ -12,6 +15,14 @@ local string = string
 local mode, server_path, player_path, port, preload, gate = ...
 local port = tonumber(port)
 local preload = preload and tonumber(preload) or 20
+
+local function response(fd, ...)
+    local ok, err = httpd.write_response(sockethelper.writefunc(fd), ...)
+    if not ok then
+        -- if err == sockethelper.socket_error , that means socket closed.
+        skynet.error(string.format("fd = %d, %s", fd, err))
+    end
+end
 
 if mode == "agent" then
 local player = require(player_path)
@@ -30,14 +41,6 @@ function on_message(cmd, data, body, ip)
         return player:pack(ret or "")
     else
         return '{"err":-1}'
-    end
-end
-
-local function response(fd, ...)
-    local ok, err = httpd.write_response(sockethelper.writefunc(fd), ...)
-    if not ok then
-        -- if err == sockethelper.socket_error , that means socket closed.
-        skynet.error(string.format("fd = %d, %s", fd, err))
     end
 end
 
@@ -92,6 +95,20 @@ skynet.start(function()
     
     local fd = socket.listen("0.0.0.0", port)
     socket.start(fd , function(fd, ip)
+        if conf.whitelist and not whitelist.check(ip) then
+            socket.start(fd)
+            skynet.error(string.format("not in whitelist:%s", ip))
+            response(fd, 403)
+            socket.close(fd)
+            return
+        end
+        if conf.blacklist and blacklist.check(ip) then
+            socket.start(fd)
+            skynet.error(string.format("in blacklist:%s", ip))
+            response(fd, 403)
+            socket.close(fd)
+            return
+        end
         --skynet.error(string.format("%s connected, pass it to agent :%08x", addr, agent[balance]))
         skynet.send(agent[balance], "lua", fd, ip)
         balance = balance + 1
