@@ -1,5 +1,7 @@
 local skynet = require "skynet"
 local util = require "util"
+local log = require "log"
+local trace = log.trace("gm")
 
 local skynet_cmd = {}
 local gmcmd = {
@@ -28,6 +30,16 @@ function CMD.run(modname, cmd, ...)
         return "服务器执行Traceback了"
     end
     return ret or "执行成功"
+end
+
+local hotfix_addrs = {}
+function CMD.reg_hotfix(addr)
+    trace("reg_hotfix:%s", addr)
+    hotfix_addrs[addr] = true 
+end
+
+function CMD.unreg_hotfix(addr)
+    hotfix_addrs[addr] = nil
 end
 
 skynet.start(function()
@@ -68,4 +80,11 @@ function skynet_cmd.list()
             v.addr, v.mem, v.mqlen, v.task, v.desc)
     end
     return str
+end
+
+function skynet_cmd.hotfix()
+    trace("gm hotfix")    
+    for addr, _ in pairs(hotfix_addrs) do
+        skynet.send(addr, "lua", "hotfix")
+    end
 end

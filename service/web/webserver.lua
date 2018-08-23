@@ -8,6 +8,7 @@ local util          = require "util"
 local conf          = require "conf"
 local whitelist     = require "ip.whitelist"
 local blacklist     = require "ip.blacklist"
+local hotfix        = require "hotfix"
 
 local table = table
 local string = string
@@ -46,6 +47,10 @@ end
 
 skynet.start(function()
     skynet.dispatch("lua", function (_,_,fd, ip)
+        if fd == "hotfix" then
+            player = hotfix.module(player_path)
+            return
+        end
         socket.start(fd)
         -- limit request body size to 8192 (you can pass nil to unlimit)
         local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(fd), 8192)
@@ -73,6 +78,7 @@ skynet.start(function()
         socket.close(fd)
     end)
     player:init(gate)
+    hotfix.reg()
 end)
 
 elseif mode == "gate" then
@@ -80,6 +86,12 @@ elseif mode == "gate" then
 local server 
 if server_path then
     server = require(server_path) 
+end
+
+local CMD = {}
+function CMD.hotfix()
+    server = hotfix.module(server_path)
+    return util.NORET
 end
 
 skynet.start(function()
@@ -118,13 +130,15 @@ skynet.start(function()
     end)
 
     skynet.dispatch("lua", function(_, _, cmd, subcmd, ...)
-        local f = assert(server[cmd], cmd)
+        local f = assert(CMD[cmd] or server[cmd], cmd)
         if type(f) == "function" then
             util.ret(f(server, subcmd, ...))
         else
             util.ret(f[subcmd](f, ...))
         end
     end)
+
+    hotfix.reg()
 end)
 
 else

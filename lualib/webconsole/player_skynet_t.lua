@@ -102,6 +102,7 @@ function M:c2s_set_whitelist(data)
 end
 
 function M:c2s_run_gm(data)
+    local time_str = string.format("[%s] ", os.date("%Y-%m-%d %H:%M:%S"))
     local args = {}
     for arg in string.gmatch(data.cmd, "[^ ]+") do
         table.insert(args, arg)
@@ -109,11 +110,11 @@ function M:c2s_run_gm(data)
     local modname = args[1]
     local cmd = args[2]
     if not modname or not cmd then
-        return {ret = "格式错误"}
+        return {ret = time_str.."格式错误"}
     end
     table.remove(args, 1)
     table.remove(args, 1)
-    return {ret = gm.run(modname, cmd, table.unpack(args))}
+    return {ret = time_str..gm.run(modname, cmd, table.unpack(args))}
 end
 
 return M
